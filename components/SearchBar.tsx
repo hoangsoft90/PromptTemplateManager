@@ -38,6 +38,7 @@ export function SearchBar({ value, onChangeText, placeholder = 'Search promptsâ€
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1, // stretch to fill the row (searchWrap) so the input is not squeezed narrow
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.surface,
