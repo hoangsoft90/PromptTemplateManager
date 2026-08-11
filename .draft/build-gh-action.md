@@ -150,14 +150,19 @@ The binary version of its metadata is 2.3.0, expected version is 2.1.0.
 ```
 
 → `react-native-google-mobile-ads@16.4.0` kéo về `play-services-ads:25.4.0` (biên dịch bằng
-Kotlin 2.3), trong khi RN 0.86 mặc định Kotlin 2.1. Fix: nâng Kotlin trong `app.json`:
+Kotlin 2.3), trong khi RN 0.86 mặc định Kotlin 2.1 — compiler 2.1 không đọc được metadata 2.3.
+
+⚠️ **Đừng nâng Kotlin** (`kotlinVersion`) — Kotlin 2.3.x làm crash `react-native-safe-area-context`
+(bug type-checker). Fix đúng là **pin `play-services-ads` xuống bản cũ tương thích** qua config
+plugin `plugins/withAdsPlayServicesFix.js` (đã có sẵn trong repo): nó append rule
+`resolutionStrategy.force 'com.google.android.gms:play-services-ads:24.2.0'` vào
+`android/build.gradle` khi prebuild. Nếu vì lý do nào đó plugin bị bỏ khỏi `app.json`:
 
 ```jsonc
-"expo-build-properties": {
-  "android": {
-    "kotlinVersion": "2.3.21"
-  }
-}
+"plugins": [
+  // ...
+  "./plugins/withAdsPlayServicesFix"
+]
 ```
 
 Rồi commit + push lại (workflow tự chạy lại).
