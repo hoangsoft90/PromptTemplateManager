@@ -1,0 +1,52 @@
+diff --git a/node_modules/react-native-google-mobile-ads/android/src/main/java/io/invertase/googlemobileads/ReactNativeGoogleMobileAdsModule.kt b/node_modules/react-native-google-mobile-ads/android/src/main/java/io/invertase/googlemobileads/ReactNativeGoogleMobileAdsModule.kt
+--- a/node_modules/react-native-google-mobile-ads/android/src/main/java/io/invertase/googlemobileads/ReactNativeGoogleMobileAdsModule.kt
++++ b/node_modules/react-native-google-mobile-ads/android/src/main/java/io/invertase/googlemobileads/ReactNativeGoogleMobileAdsModule.kt
+@@ -25,7 +25,6 @@
+ import com.google.android.gms.ads.AdRequest
+ import com.google.android.gms.ads.AdValue;
+ import com.google.android.gms.ads.OnAdInspectorClosedListener
+-import com.google.android.gms.ads.AgeRestrictedTreatment
+ 
+ class ReactNativeGoogleMobileAdsModule(
+   reactContext: ReactApplicationContext
+@@ -63,16 +62,6 @@
+       }
+     }
+ 
+-    if (requestConfiguration.hasKey("ageRestrictedTreatment")) {
+-      val ageRestrictedTreatment = requestConfiguration.getString("ageRestrictedTreatment")
+-
+-      when (ageRestrictedTreatment) {
+-        "CHILD" -> builder.setAgeRestrictedTreatment(AgeRestrictedTreatment.CHILD)
+-        "TEEN" -> builder.setAgeRestrictedTreatment(AgeRestrictedTreatment.TEEN)
+-        "UNSPECIFIED" -> builder.setAgeRestrictedTreatment(AgeRestrictedTreatment.UNSPECIFIED)
+-      }
+-    }
+-
+     if (requestConfiguration.hasKey("tagForChildDirectedTreatment")) {
+       val tagForChildDirectedTreatment = requestConfiguration.getBoolean("tagForChildDirectedTreatment")
+       builder.setTagForChildDirectedTreatment(
+diff --git a/node_modules/react-native-google-mobile-ads/ios/RNGoogleMobileAds/RNGoogleMobileAdsModule.mm b/node_modules/react-native-google-mobile-ads/ios/RNGoogleMobileAds/RNGoogleMobileAdsModule.mm
+--- a/node_modules/react-native-google-mobile-ads/ios/RNGoogleMobileAds/RNGoogleMobileAdsModule.mm
++++ b/node_modules/react-native-google-mobile-ads/ios/RNGoogleMobileAds/RNGoogleMobileAdsModule.mm
+@@ -131,20 +131,6 @@
+     }
+   }
+ 
+-  if (requestConfiguration[@"ageRestrictedTreatment"]) {
+-    NSString *ageRestrictedTreatment = requestConfiguration[@"ageRestrictedTreatment"];
+-    if ([ageRestrictedTreatment isEqualToString:@"child"]) {
+-      GADMobileAds.sharedInstance.requestConfiguration.ageRestrictedTreatment =
+-          GADAgeRestrictedTreatmentChild;
+-    } else if ([ageRestrictedTreatment isEqualToString:@"teen"]) {
+-      GADMobileAds.sharedInstance.requestConfiguration.ageRestrictedTreatment =
+-          GADAgeRestrictedTreatmentTeen;
+-    } else if ([ageRestrictedTreatment isEqualToString:@"unspecified"]) {
+-      GADMobileAds.sharedInstance.requestConfiguration.ageRestrictedTreatment =
+-          GADAgeRestrictedTreatmentUnspecified;
+-    }
+-  }
+-
+   if (requestConfiguration[@"tagForChildDirectedTreatment"]) {
+     BOOL tag = [requestConfiguration[@"tagForChildDirectedTreatment"] boolValue];
+     GADMobileAds.sharedInstance.requestConfiguration.tagForChildDirectedTreatment =
