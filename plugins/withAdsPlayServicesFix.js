@@ -22,11 +22,12 @@
 
 const { withProjectBuildGradle } = require('@expo/config-plugins');
 
-// react-native-google-mobile-ads 16.4.0 needs play-services-ads >= 25.0.0
-// (AgeRestrictedTreatment, AdSize.getLargeAnchoredAdaptiveBannerAdSize).
-// 25.4.0 is compiled with Kotlin 2.3 metadata (unreadable by Kotlin 2.1), so
-// pin the newest 25.x below it.
-const PLAY_SERVICES_ADS_VERSION = '25.3.0';
+// Every play-services-ads 25.x is compiled with Kotlin 2.3 metadata, which the
+// RN 0.86 default Kotlin 2.1 compiler cannot read (bumping Kotlin to 2.3 breaks
+// react-native-safe-area-context). Pin 24.2.0 instead; the 25.x-only APIs that
+// react-native-google-mobile-ads 16.4.0 calls are removed by the
+// patches/react-native-google-mobile-ads+16.4.0.patch (patch-package postinstall).
+const PLAY_SERVICES_ADS_VERSION = '24.2.0';
 
 const GRADLE_BLOCK = `
 
