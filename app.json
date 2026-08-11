@@ -51,7 +51,8 @@
         {
           "android": {
             "usesCleartextTraffic": true,
-            "extraProguardRules": "-keep class com.google.android.gms.internal.consent_sdk.** { *; }"
+            "extraProguardRules": "-keep class com.google.android.gms.internal.consent_sdk.** { *; }",
+            "kotlinVersion": "2.3.21"
           }
         }
       ]

@@ -140,6 +140,28 @@ jobs:
   production` (cần `EXPO_TOKEN` đặt trong **GitHub Secrets**) — nhưng đơn giản nhất vẫn là
   `eas build` cloud cho bản store.
 
+### 🔧 Troubleshooting: lỗi Kotlin với play-services-ads
+
+Lần build đầu có thể fail với:
+
+```
+Module was compiled with an incompatible version of Kotlin.
+The binary version of its metadata is 2.3.0, expected version is 2.1.0.
+```
+
+→ `react-native-google-mobile-ads@16.4.0` kéo về `play-services-ads:25.4.0` (biên dịch bằng
+Kotlin 2.3), trong khi RN 0.86 mặc định Kotlin 2.1. Fix: nâng Kotlin trong `app.json`:
+
+```jsonc
+"expo-build-properties": {
+  "android": {
+    "kotlinVersion": "2.3.21"
+  }
+}
+```
+
+Rồi commit + push lại (workflow tự chạy lại).
+
 ---
 
 ## 7. Tình trạng build EAS đang chạy (thời điểm viết)
