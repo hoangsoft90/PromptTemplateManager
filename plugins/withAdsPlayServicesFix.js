@@ -22,9 +22,11 @@
 
 const { withProjectBuildGradle } = require('@expo/config-plugins');
 
-// play-services-ads 24.x (2024) is compiled with Kotlin 1.9/2.0 metadata and is
-// API-compatible with what react-native-google-mobile-ads uses.
-const PLAY_SERVICES_ADS_VERSION = '24.2.0';
+// react-native-google-mobile-ads 16.4.0 needs play-services-ads >= 25.0.0
+// (AgeRestrictedTreatment, AdSize.getLargeAnchoredAdaptiveBannerAdSize).
+// 25.4.0 is compiled with Kotlin 2.3 metadata (unreadable by Kotlin 2.1), so
+// pin the newest 25.x below it.
+const PLAY_SERVICES_ADS_VERSION = '25.3.0';
 
 const GRADLE_BLOCK = `
 
