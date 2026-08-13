@@ -123,16 +123,18 @@ prompt, template, ai, productivity, writing
 
 ### Feature Graphic (1024×500)
 
-```
-Ý tưởng: Nền gradient indigo (#4F46E5 → #6366F1) — đúng màu primary của app.
-Layout trái → phải:
-  [Trái] Logo app + tên "Prompt Template Manager" (chữ trắng, đậm)
-  [Giữa] Chuỗi minh họa loop:  🔍 → 🧩 → ⧉
-         (kính lúp = search, puzzle = fill variable, copy icon = copy)
-  [Phải] Text nhỏ: "Search • Fill • Copy — 100% on-device"
-Khoảng an toàn: giữ nội dung trong vùng trung tâm ~80% để không bị crop trên
-các thiết bị khác nhau. Không nhồi chữ, tối đa 1 câu tagline.
-```
+✅ **Đã tạo sẵn** (đúng ý tưởng này):
+- `marketing/feature-graphic.png` — **1024×500**, sẵn sàng upload thẳng lên Play Console
+- `marketing/feature-graphic.svg` — bản nguồn (chỉnh sửa được, tái xuất PNG)
+
+Thiết kế: nền gradient indigo (#4F46E5 → #6366F1, đúng màu primary), brand
+block trái (logo {{ }} + tên app chữ trắng đậm), giữa là chuỗi loop vẽ vector
+🔍 → {{ }} → ⧉ (search → fill → copy), tagline "Search • Fill • Copy —
+100% on-device". Nội dung nằm gọn trong vùng an toàn trung tâm (không chạm
+top 1/3 và bottom 1/4 theo guideline Play).
+
+> Muốn đổi màu/chữ: sửa `marketing/feature-graphic.svg` rồi render lại bằng
+> `sharp` (`node -e "require('sharp')('marketing/feature-graphic.svg').png().toFile('marketing/feature-graphic.png')"`).
 
 ### App Icon (512×512 — dùng chung cho Play)
 

@@ -12,6 +12,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AdBanner } from '../../../components/AdBanner';
 import { ConfirmDialog } from '../../../components/ConfirmDialog';
 import { MissingState } from '../../../components/MissingState';
@@ -31,6 +32,7 @@ import type { Prompt } from '../../../types/prompt';
 
 export default function PromptDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const insets = useSafeAreaInsets();
   const toast = useToast();
   const [prompt, setPrompt] = useState<Prompt | null>(null);
   const [loading, setLoading] = useState(true);
@@ -166,7 +168,9 @@ export default function PromptDetailScreen() {
         </View>
       </ScrollView>
 
-      <View style={styles.bottomBar}>
+      {/* targetSdk 36 = edge-to-edge on Android 15+: pad the pinned bar up
+          so the banner + footer sit above the system nav bar. */}
+      <View style={[styles.bottomBar, { paddingBottom: insets.bottom }]}>
         {/* Native-only adaptive banner; renders nothing on web. */}
         <AdBanner />
         <View style={styles.footer}>

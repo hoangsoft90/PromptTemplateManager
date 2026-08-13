@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="500" viewBox="0 0 1024 500">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4F46E5"/>
+      <stop offset="1" stop-color="#6366F1"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background: brand indigo gradient -->
+  <rect width="1024" height="500" fill="url(#bg)"/>
+
+  <!-- Subtle decorative shapes (low opacity, non-content) -->
+  <circle cx="980" cy="-40" r="240" fill="#FFFFFF" opacity="0.05"/>
+  <circle cx="-30" cy="540" r="210" fill="#FFFFFF" opacity="0.05"/>
+  <circle cx="512" cy="40" r="4" fill="#FFFFFF" opacity="0.35"/>
+  <circle cx="600" cy="26" r="3" fill="#FFFFFF" opacity="0.3"/>
+  <circle cx="700" cy="38" r="2.5" fill="#FFFFFF" opacity="0.25"/>
+
+  <!-- ── LEFT: brand block (logo tile + name) ── -->
+  <!-- Logo tile: white rounded square with the {{ }} glyph -->
+  <rect x="88" y="208" width="104" height="104" rx="26" fill="#FFFFFF"/>
+  <text x="140" y="279" font-family="DejaVu Sans, sans-serif" font-size="54" font-weight="bold"
+        fill="#4F46E5" text-anchor="middle">{{ }}</text>
+
+  <!-- App name -->
+  <text x="214" y="253" font-family="DejaVu Sans, sans-serif" font-size="40" font-weight="bold"
+        fill="#FFFFFF" letter-spacing="0.5">Prompt Template</text>
+  <text x="214" y="305" font-family="DejaVu Sans, sans-serif" font-size="40" font-weight="bold"
+        fill="#FFFFFF" letter-spacing="0.5">Manager</text>
+
+  <!-- ── RIGHT: Search → Fill → Copy loop + tagline ── -->
+  <!-- 1. Search (magnifier) -->
+  <circle cx="590" cy="222" r="17" fill="none" stroke="#FFFFFF" stroke-width="5.5"/>
+  <line x1="602.5" y1="234.5" x2="616" y2="248" stroke="#FFFFFF" stroke-width="5.5" stroke-linecap="round"/>
+
+  <!-- arrow 1 -->
+  <line x1="624" y1="222" x2="650" y2="222" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"/>
+  <polygon points="646,214 660,222 646,230" fill="#FFFFFF"/>
+
+  <!-- 2. Fill ({{ }} tile) -->
+  <rect x="662" y="194" width="56" height="56" rx="14" fill="#FFFFFF" fill-opacity="0.14"
+        stroke="#FFFFFF" stroke-width="3.5"/>
+  <text x="690" y="222" font-family="DejaVu Sans, sans-serif" font-size="21" font-weight="bold"
+        fill="#FFFFFF" text-anchor="middle">{{ }}</text>
+
+  <!-- arrow 2 -->
+  <line x1="728" y1="222" x2="754" y2="222" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"/>
+  <polygon points="750,214 764,222 750,230" fill="#FFFFFF"/>
+
+  <!-- 3. Copy (overlapping squares) -->
+  <rect x="772" y="206" width="32" height="36" rx="8" fill="#FFFFFF" fill-opacity="0.08"
+        stroke="#FFFFFF" stroke-width="4"/>
+  <rect x="784" y="198" width="32" height="36" rx="8" fill="#FFFFFF" fill-opacity="0.16"
+        stroke="#FFFFFF" stroke-width="4"/>
+
+  <!-- tagline -->
+  <text x="695" y="304" font-family="DejaVu Sans, sans-serif" font-size="32" font-weight="bold"
+        fill="#FFFFFF" text-anchor="middle">Search • Fill • Copy</text>
+  <text x="695" y="338" font-family="DejaVu Sans, sans-serif" font-size="22"
+        fill="#FFFFFF" fill-opacity="0.85" text-anchor="middle">100% on-device</text>
+</svg>

@@ -2,6 +2,7 @@
 
 import * as DocumentPicker from 'expo-document-picker';
 import { router, useFocusEffect } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { exportJsonFile, readTextFile } from '../../lib/fileIO';
@@ -30,6 +31,7 @@ import {
 import { colors, radius, shadows, spacing, typography } from '../../lib/theme';
 
 export default function SettingsScreen() {
+  const insets = useSafeAreaInsets();
   const toast = useToast();
   const [busy, setBusy] = useState(false);
   const [shield, setShield] = useState(0);
@@ -260,8 +262,12 @@ export default function SettingsScreen() {
         </View>
       </ScrollView>
 
-      {/* Pinned bottom banner (native-only; renders nothing on web). */}
-      <AdBanner />
+      {/* Pinned bottom banner (native-only; renders nothing on web).
+          targetSdk 36 = edge-to-edge on Android 15+: keep the banner above
+          the system nav bar. */}
+      <View style={{ paddingBottom: insets.bottom }}>
+        <AdBanner />
+      </View>
     </View>
   );
 }

@@ -9,6 +9,7 @@
 
 import React from 'react';
 import renderer, { act } from 'react-test-renderer';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import ImportPreviewScreen from '../app/settings/import-preview';
 import { applyImport } from '../lib/importExport';
 import { clearPendingImport, getPendingImport } from '../lib/importSession';
@@ -67,10 +68,21 @@ beforeEach(() => {
   mockApplyImport.mockResolvedValue({ created: 2 });
 });
 
+// The screen reads useSafeAreaInsets (edge-to-edge bottom padding); expo-router
+// provides SafeAreaProvider at runtime, so supply fixed metrics in the test.
 function renderScreen(): renderer.ReactTestRenderer {
   let tree!: renderer.ReactTestRenderer;
   act(() => {
-    tree = renderer.create(<ImportPreviewScreen />);
+    tree = renderer.create(
+      <SafeAreaProvider
+        initialMetrics={{
+          frame: { x: 0, y: 0, width: 390, height: 844 },
+          insets: { top: 0, left: 0, right: 0, bottom: 0 },
+        }}
+      >
+        <ImportPreviewScreen />
+      </SafeAreaProvider>
+    );
   });
   return tree;
 }

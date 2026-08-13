@@ -4,6 +4,8 @@ Nhật ký làm việc — mỗi mục là gạch đầu dòng có ngày ISO `YY
 
 ---
 
+- [2026-08-13] Xong: **Fix ads/components bị che bởi system nav bar (edge-to-edge)** — targetSdk 36 bắt buộc edge-to-edge trên Android 15+ → mọi thanh `position: absolute; bottom: 0` nằm dưới system nav bar. Thêm `useSafeAreaInsets().bottom` cho: Detail `bottomBar` (banner + Edit/Delete), Fill `footer` (Cancel/Copy), Settings (bọc AdBanner), Import Preview `footer` (Cancel/Import). Tabs layout vốn đã đúng (dùng `insets.bottom`). Test import-preview bọc thêm `SafeAreaProvider` (expo-router cung cấp ở runtime). 176/176 tests + tsc clean.
+
 - [2026-08-13] Xong: **Rà soát navigation toàn diện** — fix Settings deep-link dead end (thêm `hasHistory` + back pill "← Back to library", giống Detail); dọn import `router` thừa trong `fill.tsx`/`edit.tsx`; `favorites.tsx` đổi `router.navigate('/(tabs)')` → `router.navigate('/')` (route thật, tránh warning không resolve). Xác nhận: mọi chỗ quay về đều dùng `safeBack()` (không có `router.back()` trực tiếp ngoài lib/navigation), web export không warning, 176/176 tests + tsc clean.
 
 - [2026-08-13] Xong: **Test cooldown ads** — thêm `__tests__/adsCooldown.test.ts` (5 test) phủ `AppOpenAdManager.tryShow`: skip 30s sau cold start, tối đa 1 app open/3 phút, không stack lên interstitial vừa hiện, failed show không tiêu throttle, chưa load → false. Mock AdMob phát LOADED/CLOSED + fake timers (`jest.setSystemTime`). Full suite 176/176, tsc clean.

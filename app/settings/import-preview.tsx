@@ -2,6 +2,7 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ImportPreviewList } from '../../components/ImportPreviewList';
 import { MissingState } from '../../components/MissingState';
 import { useToast } from '../../components/Toast';
@@ -11,6 +12,7 @@ import { safeBack } from '../../lib/navigation';
 import { colors, radius, spacing, typography } from '../../lib/theme';
 
 export default function ImportPreviewScreen() {
+  const insets = useSafeAreaInsets();
   const toast = useToast();
   const [applying, setApplying] = useState(false);
 
@@ -48,7 +50,9 @@ export default function ImportPreviewScreen() {
         </Text>
       </ScrollView>
 
-      <View style={styles.footer}>
+      {/* targetSdk 36 = edge-to-edge on Android 15+: pad the pinned footer
+          up so the buttons sit above the system nav bar. */}
+      <View style={[styles.footer, { paddingBottom: spacing.xl + insets.bottom }]}>
         <Pressable
           onPress={() => {
             clearPendingImport();

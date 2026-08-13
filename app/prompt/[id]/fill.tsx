@@ -15,6 +15,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MissingState } from '../../../components/MissingState';
 import { PreviewPane } from '../../../components/PreviewPane';
 import { safeBack } from '../../../lib/navigation';
@@ -28,6 +29,7 @@ import type { Prompt } from '../../../types/prompt';
 
 export default function FillPromptScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const insets = useSafeAreaInsets();
   const toast = useToast();
   const [prompt, setPrompt] = useState<Prompt | null>(null);
   const [loading, setLoading] = useState(true);
@@ -133,7 +135,9 @@ export default function FillPromptScreen() {
         <PreviewPane text={form.rendered} />
       </ScrollView>
 
-      <View style={styles.footer}>
+      {/* targetSdk 36 = edge-to-edge on Android 15+: pad the pinned footer
+          up so the buttons sit above the system nav bar. */}
+      <View style={[styles.footer, { paddingBottom: spacing.xl + insets.bottom }]}>
         <View style={styles.footerRow}>
           <Pressable
             onPress={() => safeBack()}
