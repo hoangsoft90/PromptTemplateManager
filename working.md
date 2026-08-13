@@ -6,6 +6,8 @@ Nhật ký làm việc — mỗi mục là gạch đầu dòng có ngày ISO `YY
 
 - [2026-08-13] Xong: **Fix ads/components bị che bởi system nav bar (edge-to-edge)** — targetSdk 36 bắt buộc edge-to-edge trên Android 15+ → mọi thanh `position: absolute; bottom: 0` nằm dưới system nav bar. Thêm `useSafeAreaInsets().bottom` cho: Detail `bottomBar` (banner + Edit/Delete), Fill `footer` (Cancel/Copy), Settings (bọc AdBanner), Import Preview `footer` (Cancel/Import). Tabs layout vốn đã đúng (dùng `insets.bottom`). Test import-preview bọc thêm `SafeAreaProvider` (expo-router cung cấp ở runtime). 176/176 tests + tsc clean.
 
+- [2026-08-13] Xong: **Real-SQLite test + usePrompts catch** — thêm `__tests__/promptRepository.sqlite.test.ts` (4 test) chạy backend sqlite thật qua `node:sqlite` (mock `db/client.getDb` bằng adapter bắt chước expo-sqlite API). **Kết quả quan trọng: bug SQL ESCAPE (ghi trong backlog) là FALSE POSITIVE** — xác minh bằng `od -c` (file source có đúng 2 byte backslash → template literal tạo ra SQL `ESCAPE '\'` — đúng 1 ký tự, hợp lệ) + test thật chạy đúng; record cũ nhầm do JSON-escape transport khi đọc file. Search pipeline (normalize + escape `%`/`_` + ESCAPE + rank) xác nhận đúng trên SQLite thật. Bọc `catch` cho `usePrompts` effect search (clear results, không unhandled rejection) + thêm test fail-path. Full suite 181/181, tsc clean.
+
 - [2026-08-13] Xong: **Rà soát navigation toàn diện** — fix Settings deep-link dead end (thêm `hasHistory` + back pill "← Back to library", giống Detail); dọn import `router` thừa trong `fill.tsx`/`edit.tsx`; `favorites.tsx` đổi `router.navigate('/(tabs)')` → `router.navigate('/')` (route thật, tránh warning không resolve). Xác nhận: mọi chỗ quay về đều dùng `safeBack()` (không có `router.back()` trực tiếp ngoài lib/navigation), web export không warning, 176/176 tests + tsc clean.
 
 - [2026-08-13] Xong: **Test cooldown ads** — thêm `__tests__/adsCooldown.test.ts` (5 test) phủ `AppOpenAdManager.tryShow`: skip 30s sau cold start, tối đa 1 app open/3 phút, không stack lên interstitial vừa hiện, failed show không tiêu throttle, chưa load → false. Mock AdMob phát LOADED/CLOSED + fake timers (`jest.setSystemTime`). Full suite 176/176, tsc clean.
@@ -21,7 +23,7 @@ Nhật ký làm việc — mỗi mục là gạch đầu dòng có ngày ISO `YY
 
 ## Backlog / Việc chưa xong
 
-- [ ] **🔴 HIGH — Fix bug SQL ESCAPE** (`db/promptRepository.sqlite.ts:121`): `ESCAPE '\\'` (4 backslash source) = 2 ký tự backslash trong SQL → SQLite lỗi "ESCAPE expression must be a single character" → **search gãy hoàn toàn trên Android/iOS** (test không bắt vì dùng web backend). Fix 1 dòng (`'\\'` → `'\\'` đúng 2 backslash source = 1 ký tự) + thêm test chạy sqlite thật + bọc `catch` cho `usePrompts` effect search.
+~~- [ ] 🔴 HIGH — Fix bug SQL ESCAPE~~ → **ĐÃ ĐÓNG: false positive** (xác minh `od -c` + real-SQLite test 2026-08-13 — file luôn có `ESCAPE '\\'` source = 1 backslash SQL, hợp lệ). Thay vào đó: real-SQLite test suite đã thêm (`promptRepository.sqlite.test.ts`) để khóa behavior này mãi mãi + `usePrompts` đã bọc catch.
 - [ ] **AAB signed build** (workflow `build-aab.yml`) đang chạy lần đầu trên GH Actions — verify artifact + nộp Play Console với Play App Signing.
 - [ ] **Commit `chplay.md`** (store listing draft, chưa push) — và cập nhật openspec 9.5 khi xong.
 - [ ] **Trước khi publish Play Store**: đổi `TEST_ADS = false` trong `lib/config.ts` + thay 4 iOS placeholder unit IDs bằng production IDs.

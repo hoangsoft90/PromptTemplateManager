@@ -129,4 +129,16 @@ describe('usePrompts search/filter', () => {
     expect(result.isSearching).toBe(false);
     expect(mockSearchPrompts).not.toHaveBeenCalled();
   });
+
+  it('clears results and finishes loading when search fails (no unhandled rejection)', async () => {
+    mockSearchPrompts.mockRejectedValue(new Error('db boom'));
+    await renderHook();
+
+    await act(async () => {
+      result.setQuery('email');
+    });
+
+    expect(result.results).toEqual([]);
+    expect(result.loading).toBe(false);
+  });
 });

@@ -40,6 +40,11 @@ export function usePrompts() {
         } else {
           await reload();
         }
+      } catch {
+        // A search/list failure must not surface as an unhandled rejection
+        // nor leave stale results for the current query — clear results and
+        // let the list state stand as-is.
+        if (!cancelled) setResults([]);
       } finally {
         if (!cancelled) setLoading(false);
       }
