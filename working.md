@@ -13,11 +13,13 @@ Nhật ký làm việc — mỗi mục là gạch đầu dòng có ngày ISO `YY
 - [2026-08-11] Xong: Khởi tạo hạ tầng phiên — tạo `AGENTS.md`, đọc `.plan/plan1_implementation_spec.md` v3 + toàn bộ openspec, xác nhận trạng thái MVP (mọi task `[x]` trừ 6.5, 146/146 tests, có APK local).
 
 - [2026-08-13] Xong: **Cập nhật OpenSpec** cho khớp thực tế — tasks.md: 6.5 đổi từ "EAS Build" → GH Actions (`build-apk.yml` verified success ×2) + thêm section 9 (signed AAB workflow + `withReleaseSigning` plugin no-op, keystore gitignored & bí mật giữ ngoài repo, privacy policy trên gh-pages, `chplay.md` store listing); design.md: mitigation "EAS Build used for production" → GH Actions gradle. `openspec validate --all` pass.
+- [2026-08-13] Xong: **Tạo `.project/`** — `ai-rules.md` (quy tắc làm việc AI, chắt lọc từ operating_rules + AGENTS.md) + `session-2026-08-13.md` (ghi chú phiên đầy đủ: privacy/gh-pages, code review, nav fixes, ads cooldown test, GH Actions APK/AAB, keystore, chplay, openspec).
 
 ---
 
 ## Backlog / Việc chưa xong
 
+- [ ] **🔴 HIGH — Fix bug SQL ESCAPE** (`db/promptRepository.sqlite.ts:121`): `ESCAPE '\\'` (4 backslash source) = 2 ký tự backslash trong SQL → SQLite lỗi "ESCAPE expression must be a single character" → **search gãy hoàn toàn trên Android/iOS** (test không bắt vì dùng web backend). Fix 1 dòng (`'\\'` → `'\\'` đúng 2 backslash source = 1 ký tự) + thêm test chạy sqlite thật + bọc `catch` cho `usePrompts` effect search.
 - [ ] **AAB signed build** (workflow `build-aab.yml`) đang chạy lần đầu trên GH Actions — verify artifact + nộp Play Console với Play App Signing.
 - [ ] **Commit `chplay.md`** (store listing draft, chưa push) — và cập nhật openspec 9.5 khi xong.
 - [ ] **Trước khi publish Play Store**: đổi `TEST_ADS = false` trong `lib/config.ts` + thay 4 iOS placeholder unit IDs bằng production IDs.
