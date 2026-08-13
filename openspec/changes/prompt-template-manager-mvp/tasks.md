@@ -58,7 +58,7 @@
 - [x] 6.3 UI polish pass: consistent spacing, typography, loading/empty/error states
 - [x] 6.4 Verify Definition of Done (PART I): create→list, search matrix passes, fill&copy→paste works, 0-var direct copy, both copy types update recent, export→import round-trip, re-import all-skipped, favorite/edit/delete, 8 samples on first launch, backup banner lifecycle, `{{Tone}}`/`{{tone}}` collapse
   - Verified: `tsc --noEmit` clean · 28/28 Jest tests pass (normalize matrix, variable engine, import conflict table) · `expo export` bundles for Android + web · code review fixes applied
-- [ ] 6.5 Production build (EAS Build): Android APK + iOS (if applicable)
+- [x] 6.5 Production build via GitHub Actions (no EAS token): `.github/workflows/build-apk.yml` runs `expo prebuild --clean` + `gradle assembleRelease` on push to `main` — verified success (APK artifact downloadable). iOS build deferred (no macOS runner / iOS signing).
 
 ## 7. Optional Stretch
 
@@ -72,3 +72,12 @@
 - [x] 8.4 Bug fix — SQLite `bulkInsert` duplicate-id guard: skip duplicate ids within an import batch (parity with the web backend) to avoid primary-key crashes on files containing two records with the same id
 - [x] 8.5 Bug fix — Detail screen copy toast: 0-variable prompts show "Copied!" (consistent with the list) instead of always "Template copied!"
 - [x] 8.6 Re-verified after the above: `tsc --noEmit` clean · full Jest suite passes · prebuild applies the cleartext plugin correctly
+
+## 9. Play Store Release Prep (added after MVP verification)
+
+- [x] 9.1 Signed AAB (Play Store) workflow: `.github/workflows/build-aab.yml` runs `expo prebuild --clean` + `gradle bundleRelease` with the release keystore injected from GitHub Secrets (`KEYSTORE_BASE64`, store/key passwords, alias) — no EAS token required
+- [x] 9.2 Release signing config plugin `plugins/withReleaseSigning.js`: injects `signingConfigs.release` + `buildTypes.release` into `android/app/build.gradle` when signing env vars are present; **no-op** when absent (debug/CI APK builds unaffected); registered in `app.json`; verified via local prebuild
+- [x] 9.3 Release keystore created locally (`prompt-template-manager.keystore`, alias `prompttemplate`) — gitignored (`*.keystore`), **passwords kept out of repo/memory**; uploaded as base64 GitHub Secret; use Play App Signing (upload key) on the Play Console
+- [x] 9.4 Privacy policy: `PRIVACY_POLICY.md` (English, verified against actual app behavior — 100% on-device, AdMob non-personalized only) hosted publicly at https://hoangsoft90.github.io/PromptTemplateManager/ (orphan `gh-pages` branch + Pages enabled)
+- [ ] 9.5 Store listing draft `chplay.md` (app name/short/full description ASO, category + tags, screenshot/graphic/icon ideas, Play Console content checklist) — written, **not yet committed/pushed**
+- [ ] 9.6 Play Store upload: build signed AAB via workflow (in progress) → upload to Play Console with Play App Signing → set `TEST_ADS = false` + production iOS unit IDs in a future release build

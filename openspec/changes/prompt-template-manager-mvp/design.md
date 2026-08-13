@@ -71,7 +71,7 @@ Expo managed + expo-router + expo-sqlite + expo-clipboard + expo-haptics + expo-
 - [AdMob on web is impossible] → Mitigation: lazy native import guarded by `Platform.OS` + Metro resolver alias to a web stub; web renders no ads; the web build remains a dev/preview tool.
 - [Ads can annoy users in the core loop] → Mitigation: banner only on Home/Settings/Detail; interstitial capped at every 15 copies and only when already loaded (never blocks copy); rewarded shield lets users opt out of interstitials for 20 copies; App Open capped at once per 3 minutes and never on cold start.
 - [Test IDs shipped in config] → Mitigation: documented one-place swap to production unit IDs in `lib/ads.ts` + `app.json` before store release; test ads never produce revenue and are clearly visible as test.
-- [AdMob requires dev build / cannot run in Expo Go] → Mitigation: documented in README and tasks; EAS Build used for production.
+- [AdMob requires dev build / cannot run in Expo Go] → Mitigation: documented in README and tasks; release builds produced by GitHub Actions (`expo prebuild --clean` + gradle `assembleRelease`/`bundleRelease`, signed with the release keystore from GitHub Secrets — no EAS token needed).
 - [Leading-wildcard LIKE full scan] → Mitigation: bounded by MVP dataset size (hundreds to low thousands); documented threshold (~50k rows) to revisit.
 - [Import duplicates allowed by design] → Mitigation: classification preview makes the outcome explicit before insertion; re-importing the same file yields all-skipped.
 - [NSM proxy ≠ real NSM metric] → Mitigation: clearly labeled as proxy, stored locally for future analytics seeding; no product claims based on it.

@@ -12,10 +12,13 @@ Nhật ký làm việc — mỗi mục là gạch đầu dòng có ngày ISO `YY
 - [2026-08-12] Xong: **Post-MVP build & ads config** — `TEST_ADS = true` trong `lib/config.ts` (mọi format dùng test unit IDs, skip consent gate khi test, sửa iOS app-open test ID, log lỗi load); `plugins/withCleartextTraffic.js` (HTTP mọi domain, áp dụng cả CI); xác nhận `targetSdkVersion 36`; fix 2 bug (sqlite `bulkInsert` duplicate-id guard, Detail toast 0-var "Copied!"). OpenSpec: cập nhật MVP change (spec ads TEST_ADS + tasks section 8 + design D9 đồng bộ interstitial 10→15).
 - [2026-08-11] Xong: Khởi tạo hạ tầng phiên — tạo `AGENTS.md`, đọc `.plan/plan1_implementation_spec.md` v3 + toàn bộ openspec, xác nhận trạng thái MVP (mọi task `[x]` trừ 6.5, 146/146 tests, có APK local).
 
+- [2026-08-13] Xong: **Cập nhật OpenSpec** cho khớp thực tế — tasks.md: 6.5 đổi từ "EAS Build" → GH Actions (`build-apk.yml` verified success ×2) + thêm section 9 (signed AAB workflow + `withReleaseSigning` plugin no-op, keystore gitignored & bí mật giữ ngoài repo, privacy policy trên gh-pages, `chplay.md` store listing); design.md: mitigation "EAS Build used for production" → GH Actions gradle. `openspec validate --all` pass.
+
 ---
 
 ## Backlog / Việc chưa xong
 
-- [ ] **6.5 Production build (EAS Build)**: chạy `eas build` chính thức cho Android (và iOS nếu có). APK local đã có nhưng được build trước các thay đổi mới (cleartext/ads/onboarding) → cần build lại để test.
+- [ ] **AAB signed build** (workflow `build-aab.yml`) đang chạy lần đầu trên GH Actions — verify artifact + nộp Play Console với Play App Signing.
+- [ ] **Commit `chplay.md`** (store listing draft, chưa push) — và cập nhật openspec 9.5 khi xong.
 - [ ] **Trước khi publish Play Store**: đổi `TEST_ADS = false` trong `lib/config.ts` + thay 4 iOS placeholder unit IDs bằng production IDs.
 - [ ] `SectionHeader` là dead code (còn test nhưng không dùng sau khi đổi sang tab layout) — chờ quyết định xóa hay giữ.
