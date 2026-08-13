@@ -58,7 +58,8 @@
         }
       ],
       "./plugins/withAdsPlayServicesFix",
-      "./plugins/withCleartextTraffic"
+      "./plugins/withCleartextTraffic",
+      "./plugins/withReleaseSigning"
     ],
     "extra": {
       "router": {},
