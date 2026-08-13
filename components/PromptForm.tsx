@@ -8,6 +8,7 @@ import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-
 import { findUnclosedVariable } from '../lib/variableEngine';
 import { colors, radius, spacing, typography } from '../lib/theme';
 import type { Prompt } from '../types/prompt';
+import { DisabledStateHelper } from './DisabledStateHelper';
 
 export interface PromptFormValues {
   title: string;
@@ -137,19 +138,28 @@ export function PromptForm({ initial, submitLabel, onSubmit, onCancel, enablePas
         >
           <Text style={styles.cancelText}>Cancel</Text>
         </Pressable>
-        <Pressable
-          onPress={handleSubmit}
-          disabled={!canSave}
-          style={({ pressed }) => [
-            styles.button,
-            styles.submitButton,
-            !canSave && styles.submitDisabled,
-            pressed && canSave && styles.pressed,
-          ]}
-          accessibilityLabel={submitLabel}
+        {/* DisabledStateHelper: tapping a disabled Save explains why + what
+            unlocks it, instead of dead-silent taps. */}
+        <DisabledStateHelper
+          enabled={canSave}
+          targetId="editor-save"
+          reason="Save needs both a title and some content."
+          unlockHint="Fill in the required Title and Content fields to enable Save."
+          style={styles.button}
         >
-          <Text style={styles.submitText}>{submitLabel}</Text>
-        </Pressable>
+          <Pressable
+            onPress={handleSubmit}
+            disabled={!canSave}
+            style={({ pressed }) => [
+              styles.submitButton,
+              !canSave && styles.submitDisabled,
+              pressed && canSave && styles.pressed,
+            ]}
+            accessibilityLabel={submitLabel}
+          >
+            <Text style={styles.submitText}>{submitLabel}</Text>
+          </Pressable>
+        </DisabledStateHelper>
       </View>
     </ScrollView>
   );

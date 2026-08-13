@@ -17,7 +17,7 @@ This is a greenfield Expo (React Native, managed workflow) app. It introduces:
 - **Backup reminder banner**: appears at ≥5 prompts when never exported, dismissible, disappears after export.
 - **8 sample prompts** seeded once on first launch, demonstrating distinct engine capabilities.
 - **Editor** with required-field validation and non-blocking "unfinished variable" soft-warning.
-- **AdMob monetization** (added by user decision, revises original PART A #3 "no ads" / #6 "100% free"): adaptive banner on Home + interstitial after every 10 copy actions, using test ad units by default and non-personalized ads only. Requires a dev build (native module); no ads on web.
+- **AdMob monetization** (added by user decision, revises original PART A #3 "no ads" / #6 "100% free"): adaptive banner on Home + interstitial after every 15 copy actions, test ad units by default (via a `TEST_ADS` flag) and non-personalized ads only. Requires a dev build (native module); no ads on web.
 
 Explicitly **out of scope** for this change: backend, accounts, cloud sync, share extension, dark mode, analytics backend, Markdown import/export, tags/categories filter UI, paywall, rewarded ads.
 
@@ -32,7 +32,7 @@ Explicitly **out of scope** for this change: backend, accounts, cloud sync, shar
 - `import-export`: Exact JSON export format (derived fields never exported), import validation + conflict-resolution classification, preview/confirm flow, `has_exported` bookkeeping.
 - `backup-reminder`: Threshold-based banner show/dismiss/re-show logic, export clears it.
 - `sample-seeding`: One-time seeding of 8 sample prompts through the normal `createPrompt` path, guarded by `app_meta['samples_loaded']`.
-- `ads-monetization`: AdMob banner on Home and interstitial cadence (every 10 copies), non-personalized-only, test unit IDs by default, native-only (no web).
+- `ads-monetization`: AdMob banner on Home and interstitial cadence (every 15 copies), non-personalized-only, test unit IDs by default (TEST_ADS flag), native-only (no web).
 
 ### Modified Capabilities
 

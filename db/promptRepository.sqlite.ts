@@ -157,9 +157,13 @@ export async function recordUsage(id: string): Promise<void> {
 export async function bulkInsert(prompts: ExportFilePrompt[]): Promise<void> {
   const db = await getDb();
   const now = Date.now();
+  const seen = new Set<string>();
   for (const p of prompts) {
-    // Plain INSERT: classification guarantees these ids are new (created / created_new_id),
-    // and duplicates within one file keep both rows (duplicates allowed by design).
+    // Classification guarantees ids are new (created / created_new_id). A
+    // duplicate id inside one file is malformed input — skip it rather than
+    // crashing on the PRIMARY KEY constraint (mirrors the web backend guard).
+    if (seen.has(p.id)) continue;
+    seen.add(p.id);
     const row = buildImportRow(p, now);
     await db.runAsync(
       `INSERT INTO prompts ${INSERT_COLUMNS} VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,

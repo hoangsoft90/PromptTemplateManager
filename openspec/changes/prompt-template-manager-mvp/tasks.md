@@ -63,3 +63,12 @@
 ## 7. Optional Stretch
 
 - [x] 7.1 "Paste to Create": detect clipboard content on New Prompt screen, offer one-tap "Paste & Create" pre-fill (only if genuine buffer remains)
+
+## 8. Post-MVP Build & Ads Configuration (added after MVP verification)
+
+- [x] 8.1 TEST_ADS flag: add `lib/config.ts` (`TEST_ADS = true`), wire all four ad formats (banner/interstitial/rewarded/app open) to Google official test unit IDs on Android + iOS, skip UMP consent gate in test mode, fix iOS app-open test ID, add load-failure logging when testing; banner uses `getBannerUnitId()` (adaptive test ID) instead of `__DEV__` so release builds also get test ads while testing
+- [x] 8.2 Cleartext HTTP for all domains: add `plugins/withCleartextTraffic.js` config plugin (writes `res/xml/network_security_config.xml` with `base-config cleartextTrafficPermitted=true` + wires `android:networkSecurityConfig` + keeps `usesCleartextTraffic`), registered in `app.json` so CI (`expo prebuild --clean`) and local builds both apply it; verified via prebuild run
+- [x] 8.3 targetSdkVersion 36: confirmed `compileSdkVersion: 36` / `targetSdkVersion: 36` in `app.json` + `android/gradle.properties` survive prebuild (Google Play requires API 36 from 31 Aug 2026)
+- [x] 8.4 Bug fix — SQLite `bulkInsert` duplicate-id guard: skip duplicate ids within an import batch (parity with the web backend) to avoid primary-key crashes on files containing two records with the same id
+- [x] 8.5 Bug fix — Detail screen copy toast: 0-variable prompts show "Copied!" (consistent with the list) instead of always "Template copied!"
+- [x] 8.6 Re-verified after the above: `tsc --noEmit` clean · full Jest suite passes · prebuild applies the cleartext plugin correctly

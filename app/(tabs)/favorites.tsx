@@ -18,7 +18,7 @@ export default function FavoritesTab() {
       title="No favorites yet"
       message="Tap the ☆ on any prompt to mark it as a favorite — it'll show up here."
       primaryLabel="Browse prompts"
-      onPrimary={() => router.navigate('/(tabs)')}
+      onPrimary={() => router.navigate('/')}
     />
   );
 }

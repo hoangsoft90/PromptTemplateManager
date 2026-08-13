@@ -14,6 +14,10 @@
 
 import { Platform } from 'react-native';
 
+// This file locks the PRODUCTION consent gate (TEST_ADS=false). The test-ads
+// mode is covered in adsConfig.test.ts.
+jest.mock('../lib/config', () => ({ TEST_ADS: false }));
+
 jest.mock('../db/promptRepository', () => ({
   getAppMeta: jest.fn(() => Promise.resolve(null)),
   setAppMeta: jest.fn(() => Promise.resolve()),

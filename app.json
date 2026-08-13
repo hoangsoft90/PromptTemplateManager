@@ -50,12 +50,15 @@
         "expo-build-properties",
         {
           "android": {
+            "compileSdkVersion": 36,
+            "targetSdkVersion": 36,
             "usesCleartextTraffic": true,
             "extraProguardRules": "-keep class com.google.android.gms.internal.consent_sdk.** { *; }"
           }
         }
       ],
-      "./plugins/withAdsPlayServicesFix"
+      "./plugins/withAdsPlayServicesFix",
+      "./plugins/withCleartextTraffic"
     ],
     "extra": {
       "router": {},

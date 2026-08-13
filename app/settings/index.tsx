@@ -5,6 +5,7 @@ import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { exportJsonFile, readTextFile } from '../../lib/fileIO';
+import { safeBack } from '../../lib/navigation';
 import { useToast } from '../../components/Toast';
 import {
   buildExportFile,
@@ -12,6 +13,8 @@ import {
   parseImportFile,
 } from '../../lib/importExport';
 import { AdBanner } from '../../components/AdBanner';
+import { FeatureBadge } from '../../components/FeatureBadge';
+import { Tooltip } from '../../components/Tooltip';
 import { setPendingImport } from '../../lib/importSession';
 import { restoreSamples } from '../../lib/samplePrompts';
 import { markExported, listAll } from '../../db/promptRepository';
@@ -31,6 +34,8 @@ export default function SettingsScreen() {
   const [busy, setBusy] = useState(false);
   const [shield, setShield] = useState(0);
   const [privacyVisible, setPrivacyVisible] = useState(isPrivacyOptionsRequired());
+  // Deep link lands here with no back stack — offer an in-content way home.
+  const [hasHistory] = useState(() => router.canGoBack());
 
   // Refresh shield status on every focus so it stays accurate after copies
   // elsewhere decrement it.
@@ -146,6 +151,15 @@ export default function SettingsScreen() {
         </View>
       )}
       <ScrollView contentContainerStyle={styles.content}>
+        {!hasHistory && (
+          <Pressable
+            onPress={() => safeBack()}
+            style={({ pressed }) => [styles.backPill, pressed && styles.pressed]}
+            accessibilityLabel="Back to library"
+          >
+            <Text style={styles.backPillText}>← Back to library</Text>
+          </Pressable>
+        )}
         {/* Ads are native-only (AdMob); hide the rewarded CTA on web. */}
         {Platform.OS !== 'web' && (
           <>
@@ -199,17 +213,29 @@ export default function SettingsScreen() {
           <Text style={styles.chevron}>›</Text>
         </Pressable>
 
-        <Pressable
-          onPress={handleImport}
-          style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+        {/* FeatureBadge + one-time Tooltip demo: points at the Import row for
+            new users so the backup flow is discoverable. */}
+        <Tooltip
+          id="settings-import"
+          title="Restore anywhere"
+          message="Import a JSON backup to restore your library on any device."
+          placement="top"
         >
-          <Text style={styles.rowIcon}>📥</Text>
-          <View style={styles.rowBody}>
-            <Text style={styles.rowTitle}>Import backup</Text>
-            <Text style={styles.rowSubtitle}>Restore prompts from a JSON backup file</Text>
-          </View>
-          <Text style={styles.chevron}>›</Text>
-        </Pressable>
+          <Pressable
+            onPress={handleImport}
+            style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+          >
+            <Text style={styles.rowIcon}>📥</Text>
+            <View style={styles.rowBody}>
+              <View style={styles.rowTitleRow}>
+                <Text style={styles.rowTitle}>Import backup</Text>
+                <FeatureBadge label="New" />
+              </View>
+              <Text style={styles.rowSubtitle}>Restore prompts from a JSON backup file</Text>
+            </View>
+            <Text style={styles.chevron}>›</Text>
+          </Pressable>
+        </Tooltip>
 
         <Pressable
           onPress={handleRestoreSamples}
@@ -273,6 +299,7 @@ const styles = StyleSheet.create({
   },
   rowIcon: { fontSize: 22, marginRight: spacing.md },
   rowBody: { flex: 1 },
+  rowTitleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   rowTitle: { ...typography.body, fontWeight: '600' },
   rowSubtitle: { ...typography.caption, marginTop: 2 },
   chevron: { fontSize: 20, color: colors.textMuted },
@@ -284,5 +311,15 @@ const styles = StyleSheet.create({
   },
   aboutTitle: { ...typography.subtitle, color: colors.primary, marginBottom: spacing.sm },
   aboutText: { ...typography.bodySecondary, marginBottom: spacing.xs, lineHeight: 19 },
+  backPill: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    backgroundColor: colors.primarySoft,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    marginBottom: spacing.lg,
+  },
+  backPillText: { color: colors.primary, fontSize: 13, fontWeight: '600' },
   pressed: { opacity: 0.85 },
 });

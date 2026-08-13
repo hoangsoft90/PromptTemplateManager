@@ -1,6 +1,6 @@
 // app/prompt/[id]/edit.tsx — Editor (edit, pre-filled).
 
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { MissingState } from '../../../components/MissingState';

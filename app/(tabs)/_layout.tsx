@@ -4,25 +4,59 @@
 // custom tab bar so it sits between the content and the tab bar.
 
 import { router, Tabs, useFocusEffect } from 'expo-router';
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AdBanner } from '../../components/AdBanner';
 import { BackupReminderBanner } from '../../components/BackupReminderBanner';
 import { SearchBar } from '../../components/SearchBar';
 import { useBackupReminder } from '../../hooks/useBackupReminder';
+import {
+  useOnboarding,
+  useOnboardingTarget,
+} from '../../lib/onboarding/OnboardingContext';
+import type { OnboardingStep } from '../../lib/onboarding/types';
 import { colors, radius, shadows, spacing } from '../../lib/theme';
 import { PromptsProvider, usePromptsContext } from '../../lib/PromptsContext';
 
 const AD_HEIGHT = 50;
 const TAB_BAR_HEIGHT = Platform.OS === 'android' ? 56 : 49;
 
+// First-run tour (shown once per install): walks a new user through the core
+// Search → Fill → Copy loop targets on the Home screen.
+const FIRST_RUN_STEPS: OnboardingStep[] = [
+  {
+    id: 'search',
+    targetId: 'home-search',
+    title: 'Search without accents',
+    message: 'Type “da nang” to find “Đà Nẵng” — diacritics are ignored when searching.',
+    placement: 'bottom',
+  },
+  {
+    id: 'fab',
+    targetId: 'home-fab',
+    title: 'Create a template',
+    message: 'Tap + to turn a repeated AI instruction into a reusable {{variable}} template.',
+    placement: 'top',
+  },
+  {
+    id: 'tabs',
+    targetId: 'home-tabs',
+    title: 'Browse your library',
+    message: 'Use the tabs to see All, Favorites, and Recently Used prompts.',
+    placement: 'top',
+  },
+];
+
 function Header({ backup }: { backup: ReturnType<typeof useBackupReminder> }) {
   const { query, setQuery, isSearching } = usePromptsContext();
+  const searchRef = useOnboardingTarget('home-search');
   return (
     <>
       <View style={styles.searchWrap}>
-        <SearchBar value={query} onChangeText={setQuery} />
+        <View ref={searchRef} collapsable={false} style={styles.searchTarget}>
+          <SearchBar value={query} onChangeText={setQuery} />
+        </View>
         <Pressable
           onPress={() => router.push('/settings')}
           style={styles.settingsButton}
@@ -48,6 +82,9 @@ function TabsContent() {
   const { reload } = usePromptsContext();
   const backup = useBackupReminder();
   const insets = useSafeAreaInsets();
+  const { startTour } = useOnboarding();
+  const fabRef = useOnboardingTarget('home-fab');
+  const tabsRef = useOnboardingTarget('home-tabs');
 
   // Refresh lists + backup banner whenever the tabs regain focus (e.g. after
   // returning from Detail / Settings / a copy action).
@@ -58,6 +95,15 @@ function TabsContent() {
     }, [reload, backup.refresh])
   );
 
+  // First-run tour: start once shortly after the tab bar mounts. startTour
+  // itself checks persistence, so this fires repeatedly but only shows once.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      void startTour('first-run', FIRST_RUN_STEPS);
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [startTour]);
+
   // AdBanner sits between the tab content and the tab bar.
   const adBottom = TAB_BAR_HEIGHT + insets.bottom;
   // FAB sits above the ad banner + tab bar + safe area.
@@ -67,6 +113,7 @@ function TabsContent() {
     <View style={styles.container}>
       <Header backup={backup} />
 
+      <View ref={tabsRef} collapsable={false} style={styles.tabsTarget}>
       <Tabs
         screenOptions={{
           headerShown: false,
@@ -103,19 +150,22 @@ function TabsContent() {
           }}
         />
       </Tabs>
+      </View>
 
       {/* Ad banner anchored above the tab bar */}
       <View style={[styles.adWrapper, { bottom: adBottom }]}>
         <AdBanner />
       </View>
 
-      <Pressable
-        onPress={() => router.push('/prompt/new')}
-        style={({ pressed }) => [styles.fab, { bottom: fabBottom }, pressed && styles.fabPressed]}
-        accessibilityLabel="Create new prompt"
-      >
-        <Text style={styles.fabIcon}>＋</Text>
-      </Pressable>
+      <View ref={fabRef} collapsable={false} style={[styles.fabWrap, { bottom: fabBottom }]}>
+        <Pressable
+          onPress={() => router.push('/prompt/new')}
+          style={({ pressed }) => [styles.fab, pressed && styles.fabPressed]}
+          accessibilityLabel="Create new prompt"
+        >
+          <Text style={styles.fabIcon}>＋</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -150,17 +200,23 @@ const styles = StyleSheet.create({
   },
   settingsIcon: { fontSize: 18 },
   bannerWrap: { paddingHorizontal: spacing.lg, paddingBottom: spacing.sm },
-  fab: {
+  fabWrap: {
     position: 'absolute',
     right: spacing.xl,
     width: 58,
     height: 58,
+    borderRadius: radius.full,
+  },
+  fab: {
+    flex: 1,
     borderRadius: radius.full,
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     ...shadows.fab,
   },
+  searchTarget: { flex: 1 },
+  tabsTarget: { flex: 1 },
   fabPressed: { backgroundColor: colors.primaryPressed, transform: [{ scale: 0.96 }] },
   fabIcon: { color: '#FFFFFF', fontSize: 28, fontWeight: '400', lineHeight: 30 },
   adWrapper: {

@@ -8,6 +8,7 @@ import { ToastProvider } from '../components/Toast';
 import { initStorage } from '../db/init';
 import { initializeAds } from '../lib/ads';
 import { useAppOpenAd } from '../hooks/useAppOpenAd';
+import { OnboardingProvider } from '../lib/onboarding/OnboardingContext';
 import { seedSamplesIfNeeded } from '../lib/samplePrompts';
 import { colors, spacing, typography } from '../lib/theme';
 
@@ -53,8 +54,10 @@ export default function RootLayout() {
 
   return (
     <ToastProvider>
-      <AdGateHost />
-      <Stack
+      {/* In-app guidance: tooltips, first-run tours, disabled-state help. */}
+      <OnboardingProvider>
+        <AdGateHost />
+        <Stack
         screenOptions={{
           headerTintColor: colors.primary,
           headerTitleStyle: { fontWeight: '700' },
@@ -70,7 +73,8 @@ export default function RootLayout() {
         <Stack.Screen name="prompt/[id]/fill" options={{ title: 'Fill & Copy' }} />
         <Stack.Screen name="settings/index" options={{ title: 'Settings' }} />
         <Stack.Screen name="settings/import-preview" options={{ title: 'Import Preview' }} />
-      </Stack>
+        </Stack>
+      </OnboardingProvider>
     </ToastProvider>
   );
 }

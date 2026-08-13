@@ -5,14 +5,17 @@
 // This module is web-safe: on web it exports inert stubs so the web dev
 // server keeps working (see metro.config.js resolver alias).
 //
-// AD UNIT IDS: Android uses the real AdMob unit IDs (production, package
-// com.hoangweb.prompttemplate). iOS still uses Google test IDs — replace with
-// production iOS unit IDs before an iOS release:
-//   - iOS banner:        ca-app-pub-<PUB>/<ADUNIT>
-//   - iOS interstitial:  ca-app-pub-<PUB>/<ADUNIT>
-//   - iOS rewarded:      ca-app-pub-<PUB>/<ADUNIT>
-//   - iOS app open:      ca-app-pub-<PUB>/<ADUNIT>
-// androidAppId in app.json is already the real Android app ID.
+// TEST vs PRODUCTION ADS (see lib/config.ts `TEST_ADS`):
+//   - TEST_ADS = true: every format uses Google's official test unit IDs on
+//     both platforms. Test ads always fill and never serve real traffic, so
+//     AdMob never limits the account for test activity. The UMP consent gate
+//     is skipped (test ads are non-personalized and harmless).
+//   - TEST_ADS = false: production unit IDs below are used. Replace the iOS
+//     placeholders with real iOS unit IDs before an iOS release:
+//       iOS banner:        ca-app-pub-<PUB>/<ADUNIT>
+//       iOS interstitial:  ca-app-pub-<PUB>/<ADUNIT>
+//       iOS rewarded:      ca-app-pub-<PUB>/<ADUNIT>
+//       iOS app open:      ca-app-pub-<PUB>/<ADUNIT>
 //
 // MONETIZATION RULE (kept non-intrusive for the core Search → Fill → Copy loop):
 //   - Banner: adaptive banner at the bottom of Home, Settings and Detail.
@@ -24,11 +27,14 @@
 //     once every 3 minutes, never stacked on a recently shown interstitial).
 //   - Ads only load lazily in the background and only show if ready — they
 //     never delay or block the copy flow.
-//   - EU/EEA/UK (UMP): all ad requests are gated on Google's consent flow
-//     (see initializeAds + canRequestAds).
+//   - Production (TEST_ADS=false) only: EU/EEA/UK ad requests are gated on
+//     Google's consent flow (see initializeAds + canRequestAds).
 
 import { Platform } from 'react-native';
 import { getAppMeta, incrementAppMeta, setAppMeta } from '../db/promptRepository';
+import { TEST_ADS } from './config';
+
+export { TEST_ADS };
 
 const AD_COPY_COUNT_KEY = 'ad_copy_count';
 const AD_SHIELD_KEY = 'ad_shield_copies';
@@ -42,35 +48,59 @@ const APP_OPEN_MIN_INTERVAL_MS = 3 * 60_000; // at most one every 3 minutes
 
 export const ADS_ENABLED = Platform.OS !== 'web';
 
-// --- Unit IDs (Android: production; iOS: test until a release build) ---
+// --- Unit IDs ---
+// TEST_ADS=true → Google's official test IDs (fill on any device, no real
+// traffic). TEST_ADS=false → production IDs (Android live; iOS placeholders
+// that still use test IDs until a release build exists).
+
+// Official Google AdMob test ad unit IDs (both platforms).
+// NOTE: banner uses Google's ADAPTIVE banner test unit (…/9214589741) because
+// AdBanner renders with BannerAdSize.ANCHORED_ADAPTIVE_BANNER — matching the
+// requested size avoids "placeholder but no ad renders" issues.
+export const TEST_AD_UNIT_IDS = {
+  bannerAndroid: 'ca-app-pub-3940256099942544/9214589741', // adaptive banner
+  bannerIos: 'ca-app-pub-3940256099942544/9214589741', // adaptive banner
+  interstitialAndroid: 'ca-app-pub-3940256099942544/1033173712',
+  interstitialIos: 'ca-app-pub-3940256099942544/4411468910',
+  rewardedAndroid: 'ca-app-pub-3940256099942544/5224354917',
+  rewardedIos: 'ca-app-pub-3940256099942544/1712485313',
+  appOpenAndroid: 'ca-app-pub-3940256099942544/3419835194',
+  appOpenIos: 'ca-app-pub-3940256099942544/5662855259',
+};
 
 export const AD_UNIT_IDS = {
   bannerAndroid: 'ca-app-pub-6917313063209470/9880969806', // production banner
-  bannerIos: 'ca-app-pub-3940256099942544/2934735716', // test banner (iOS)
+  bannerIos: TEST_AD_UNIT_IDS.bannerIos, // test until an iOS release build
   interstitialAndroid: 'ca-app-pub-6917313063209470/5366295718', // production interstitial
-  interstitialIos: 'ca-app-pub-3940256099942544/4411468910', // test interstitial (iOS)
+  interstitialIos: TEST_AD_UNIT_IDS.interstitialIos, // test until an iOS release build
   rewardedAndroid: 'ca-app-pub-6917313063209470/7062520767', // production rewarded
-  rewardedIos: 'ca-app-pub-3940256099942544/1712485313', // test rewarded (iOS)
+  rewardedIos: TEST_AD_UNIT_IDS.rewardedIos, // test until an iOS release build
   appOpenAndroid: 'ca-app-pub-6917313063209470/7967041349', // production app open
-  appOpenIos: 'ca-app-pub-3940256099942544/5575463023', // test app open (iOS)
+  appOpenIos: TEST_AD_UNIT_IDS.appOpenIos, // test until an iOS release build
 };
 
+function unitIds(): typeof AD_UNIT_IDS {
+  return TEST_ADS ? TEST_AD_UNIT_IDS : AD_UNIT_IDS;
+}
+
 export function getBannerUnitId(): string {
-  return Platform.OS === 'ios' ? AD_UNIT_IDS.bannerIos : AD_UNIT_IDS.bannerAndroid;
+  const ids = unitIds();
+  return Platform.OS === 'ios' ? ids.bannerIos : ids.bannerAndroid;
 }
 
 export function getInterstitialUnitId(): string {
-  return Platform.OS === 'ios'
-    ? AD_UNIT_IDS.interstitialIos
-    : AD_UNIT_IDS.interstitialAndroid;
+  const ids = unitIds();
+  return Platform.OS === 'ios' ? ids.interstitialIos : ids.interstitialAndroid;
 }
 
 export function getRewardedUnitId(): string {
-  return Platform.OS === 'ios' ? AD_UNIT_IDS.rewardedIos : AD_UNIT_IDS.rewardedAndroid;
+  const ids = unitIds();
+  return Platform.OS === 'ios' ? ids.rewardedIos : ids.rewardedAndroid;
 }
 
 export function getAppOpenUnitId(): string {
-  return Platform.OS === 'ios' ? AD_UNIT_IDS.appOpenIos : AD_UNIT_IDS.appOpenAndroid;
+  const ids = unitIds();
+  return Platform.OS === 'ios' ? ids.appOpenIos : ids.appOpenAndroid;
 }
 
 // --- Web-safe lazy import of the native module ---
@@ -122,7 +152,8 @@ class InterstitialManager {
         this.loaded = false;
         this.ad?.load(); // preload the next one
       });
-      this.ad.addAdEventListener(AdEventType.ERROR, () => {
+      this.ad.addAdEventListener(AdEventType.ERROR, (error: unknown) => {
+        if (TEST_ADS) console.warn('[ads] interstitial load failed:', error);
         this.loaded = false;
       });
       this.ad.load();
@@ -188,7 +219,8 @@ class RewardedManager {
         this.pendingResolve = null;
         this.ad?.load(); // preload the next one
       });
-      this.ad.addAdEventListener(AdEventType.ERROR, () => {
+      this.ad.addAdEventListener(AdEventType.ERROR, (error: unknown) => {
+        if (TEST_ADS) console.warn('[ads] rewarded load failed:', error);
         this.loaded = false;
         this.pendingResolve?.(false);
         this.pendingResolve = null;
@@ -254,7 +286,8 @@ class AppOpenAdManager {
         this.loaded = false;
         this.ad?.load(); // preload the next one
       });
-      this.ad.addAdEventListener(AdEventType.ERROR, () => {
+      this.ad.addAdEventListener(AdEventType.ERROR, (error: unknown) => {
+        if (TEST_ADS) console.warn('[ads] app open load failed:', error);
         this.loaded = false;
       });
       this.ad.load();
@@ -393,20 +426,30 @@ function startAds(): void {
 
 /**
  * Initialize the AdMob SDK (call once at app start, fire-and-forget).
- * Runs the UMP consent flow first — on EEA/UK the Google-rendered consent
- * form is presented before any ad is requested. Never blocks app startup and
- * never throws.
+ *
+ * TEST_ADS=true: starts the SDK immediately — no consent gate. Google test
+ * ads are non-personalized and never serve real traffic, so nothing blocks
+ * them from loading on any device. This is the mode to verify the ad
+ * pipeline before launch.
+ *
+ * TEST_ADS=false: runs the UMP consent flow first — on EEA/UK the
+ * Google-rendered consent form is presented before any ad is requested.
+ * Never blocks app startup and never throws.
  */
 export async function initializeAds(): Promise<void> {
   const mod = nativeModule();
   if (!mod) return;
+  if (TEST_ADS) {
+    // Test mode: skip the consent gate entirely so test ads always load.
+    startAds();
+    return;
+  }
   try {
     // Dev builds force the EEA geography so the form can be exercised on
-    // emulators/test devices; release builds use the real geography.
-    // Dev builds force the EEA geography so the form can be exercised on
-    // emulators (auto-whitelisted) or whitelisted test devices; release builds
-    // use the real geography. On a non-whitelisted physical device the debug
-    // geography is ignored — whitelist it in the AdMob console to test.
+    // emulators (auto-whitelisted) or whitelisted test devices; release
+    // builds use the real geography. On a non-whitelisted physical device
+    // the debug geography is ignored — whitelist it in the AdMob console to
+    // test.
     const options = __DEV__
       ? { debugGeography: mod.AdsConsentDebugGeography.EEA }
       : undefined;

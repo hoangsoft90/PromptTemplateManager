@@ -61,7 +61,9 @@ export default function PromptDetailScreen() {
       await Clipboard.setStringAsync(prompt.content);
       await recordUsage(prompt.id);
       await incrementAppMeta('nsm_quick_copy_count');
-      toast.show('Template copied!');
+      // Match PromptList: a template with variables says "Template copied!",
+      // a zero-variable prompt just says "Copied!".
+      toast.show(prompt.content.includes('{{') ? 'Template copied!' : 'Copied!');
       void load();
       void onCopyComplete();
     } catch {
