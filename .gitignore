@@ -1,6 +1,7 @@
 # --- Agent/tooling ---
 .agent
-.agents
+.agents/*
+!.agents/skills/
 .claude
 .cocoindex_code
 .codegraph
