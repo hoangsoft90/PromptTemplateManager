@@ -81,13 +81,14 @@ jobs:
       - name: Verify AAB is signed with the project key (not debug)
         working-directory: android
         run: |
-          # apksigner --print-certs shows the actual signer certificate.
+          # jarsigner verifies JAR-style archives (AABs). apksigner only reads
+          # APKs — it rejects AABs with "Missing AndroidManifest.xml".
           # Fail the build if the AAB is still signed with the debug keystore
           # (Play Console rejects debug-signed bundles).
-          APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          AAB=app/build/outputs/bundle/release/app-release.aab
           echo "Signer certificates:"
-          "$APKSIGNER" verify --print-certs app/build/outputs/bundle/release/app-release.aab
-          if "$APKSIGNER" verify --print-certs app/build/outputs/bundle/release/app-release.aab | grep -q "Android Debug"; then
+          jarsigner -verify -certs -verbose "$AAB" 2>&1 | grep -E "CN=|jar verified" || true
+          if jarsigner -verify -certs -verbose "$AAB" 2>&1 | grep -q "CN=Android Debug"; then
             echo "::error::AAB is signed with the DEBUG keystore — release signing was not applied"
             exit 1
           fi
