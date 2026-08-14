@@ -56,7 +56,7 @@ export async function updatePrompt(
 
   await db.runAsync(
     `UPDATE prompts SET title = ?, content = ?, category = ?, tags = ?, search_normalized = ?, updated_at = ? WHERE id = ?`,
-    [title, content, category, JSON.stringify(tags), computeSearchNormalized(title, content), Date.now(), id]
+    [title, content, category, JSON.stringify(tags), computeSearchNormalized(title, content, category, tags), Date.now(), id]
   );
 
   const updated = await getPromptById(id);
@@ -101,6 +101,36 @@ export async function listRecentlyUsed(limit?: number): Promise<Prompt[]> {
     limit ? [limit] : []
   );
   return rows.map(rowToPrompt);
+}
+
+export async function listCategories(): Promise<string[]> {
+  const db = await getDb();
+  const rows = await db.getAllAsync<{ category: string }>(
+    `SELECT DISTINCT category FROM prompts WHERE category <> '' ORDER BY category COLLATE NOCASE ASC`
+  );
+  return rows.map((r) => r.category);
+}
+
+export async function listTags(): Promise<string[]> {
+  const db = await getDb();
+  // Tags are stored as one JSON array per row — DISTINCT must happen in JS.
+  // At MVP scale (hundreds of rows) this is fast and avoids JSON1 reliance.
+  const rows = await db.getAllAsync<PromptRow>('SELECT tags FROM prompts');
+  const seen = new Set<string>();
+  for (const row of rows) {
+    try {
+      const parsed: unknown = JSON.parse(row.tags);
+      if (Array.isArray(parsed)) {
+        for (const t of parsed) {
+          const s = String(t).trim();
+          if (s) seen.add(s);
+        }
+      }
+    } catch {
+      // malformed JSON → ignore this row's tags
+    }
+  }
+  return [...seen].sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
 }
 
 // ---------------------------------------------------------------------------
@@ -223,6 +253,8 @@ export const repository: PromptRepository = {
   listFavorites,
   listRecentlyUsed,
   searchPrompts,
+  listCategories,
+  listTags,
   toggleFavorite,
   recordUsage,
   bulkInsert,

@@ -5,6 +5,8 @@
 import { Asset } from 'expo-asset';
 import type { SQLiteDatabase } from 'expo-sqlite';
 import { readTextFile } from '../lib/fileIO';
+import { computeSearchNormalized } from './promptRepository.shared';
+import type { PromptRow } from '../types/prompt';
 
 type Migration = { version: number; up: (db: SQLiteDatabase) => Promise<void> };
 
@@ -30,7 +32,29 @@ const migrations: Migration[] = [
       await db.execAsync(sql);
     },
   },
-  // future: { version: 2, up: async (db) => { await db.execAsync('ALTER TABLE prompts ADD COLUMN ...') } },
+  {
+    // v2: search_normalized now includes category + tags (category/tag search,
+    // same computation as buildCreateRow/buildImportRow). Recompute existing
+    // rows so old data is searchable the same way as newly created rows.
+    // This is idempotent — safe to re-run after a partial failure.
+    version: 2,
+    up: async (db) => {
+      const rows = await db.getAllAsync<PromptRow>('SELECT * FROM prompts');
+      for (const row of rows) {
+        let tags: string[] = [];
+        try {
+          const parsed: unknown = JSON.parse(row.tags);
+          if (Array.isArray(parsed)) tags = parsed.map(String);
+        } catch {
+          tags = [];
+        }
+        await db.runAsync('UPDATE prompts SET search_normalized = ? WHERE id = ?', [
+          computeSearchNormalized(row.title, row.content, row.category, tags),
+          row.id,
+        ]);
+      }
+    },
+  },
 ];
 
 export async function runMigrations(db: SQLiteDatabase): Promise<void> {

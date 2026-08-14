@@ -6,6 +6,7 @@ import * as Clipboard from 'expo-clipboard';
 import React from 'react';
 import renderer, { act } from 'react-test-renderer';
 import { PromptForm } from '../components/PromptForm';
+import { listCategories, listTags } from '../db/promptRepository';
 import type { Prompt } from '../types/prompt';
 import { press, textsIn } from '../jest/testUtils';
 
@@ -13,7 +14,31 @@ jest.mock('expo-clipboard', () => ({
   getStringAsync: jest.fn(),
 }));
 
+// The form reads existing categories/tags for suggestion chips on mount —
+// mock them so the effect resolves fast and never touches a real DB.
+jest.mock('../db/promptRepository', () => ({
+  listCategories: jest.fn(),
+  listTags: jest.fn(),
+}));
+
 const mockGetStringAsync = Clipboard.getStringAsync as jest.Mock;
+const mockListCategories = listCategories as jest.Mock;
+const mockListTags = listTags as jest.Mock;
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  // Default: no existing values, so the suggestion effect resolves to []
+  // (the component reads these before chips can render).
+  mockListCategories.mockResolvedValue([]);
+  mockListTags.mockResolvedValue([]);
+});
+
+/** Flush the suggestion-loading effect (mocked promises resolve immediately). */
+async function flushSuggestions(): Promise<void> {
+  await act(async () => {
+    await Promise.resolve();
+  });
+}
 
 function makePrompt(overrides: Partial<Prompt> = {}): Prompt {
   return {
@@ -145,5 +170,56 @@ describe('PromptForm validation', () => {
     });
 
     expect(field(tree, 'Prompt content').props.value).toBe('');
+  });
+
+  it('offers existing categories and tags as tap-to-select chips', async () => {
+    mockListCategories.mockResolvedValue(['Dev', 'Writing']);
+    mockListTags.mockResolvedValue(['email', 'sales']);
+    const { tree } = renderForm();
+    await flushSuggestions();
+
+    const catChip = tree.root.findByProps({ accessibilityLabel: 'Suggested category Writing' });
+    act(() => catChip.props.onPress());
+    expect(field(tree, 'Prompt category').props.value).toBe('Writing');
+
+    const tagChip = tree.root.findByProps({ accessibilityLabel: 'Suggested tag email' });
+    act(() => tagChip.props.onPress());
+    expect(field(tree, 'Prompt tags').props.value).toBe('email');
+  });
+
+  it('suggestion chips filter out the typed category and already-present tags', async () => {
+    mockListCategories.mockResolvedValue(['Dev', 'Writing']);
+    mockListTags.mockResolvedValue(['email', 'sales']);
+    const { tree } = renderForm();
+    await flushSuggestions();
+
+    act(() => field(tree, 'Prompt category').props.onChangeText('Writ'));
+    // "Writing" still matches the typed prefix; "Dev" no longer does.
+    expect(() =>
+      tree.root.findByProps({ accessibilityLabel: 'Suggested category Writing' })
+    ).not.toThrow();
+    expect(() =>
+      tree.root.findByProps({ accessibilityLabel: 'Suggested category Dev' })
+    ).toThrow();
+
+    act(() => field(tree, 'Prompt tags').props.onChangeText('email'));
+    // "email" is already in the tags input → hidden; "sales" stays.
+    expect(() => tree.root.findByProps({ accessibilityLabel: 'Suggested tag email' })).toThrow();
+    expect(() =>
+      tree.root.findByProps({ accessibilityLabel: 'Suggested tag sales' })
+    ).not.toThrow();
+  });
+
+  it('a suggestion failure never blocks the editor', async () => {
+    mockListCategories.mockRejectedValue(new Error('db boom'));
+    mockListTags.mockRejectedValue(new Error('db boom'));
+    const { tree, onSubmit } = renderForm();
+    await flushSuggestions();
+
+    act(() => field(tree, 'Prompt title').props.onChangeText('Title'));
+    act(() => field(tree, 'Prompt content').props.onChangeText('Content'));
+    expect(submitButton(tree).props.disabled).toBe(false);
+    press(tree, 'Save');
+    expect(onSubmit).toHaveBeenCalledTimes(1);
   });
 });

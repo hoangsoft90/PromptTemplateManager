@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   deletePrompt as deletePromptRepo,
   listAll,
+  listCategories,
   listFavorites,
   listRecentlyUsed,
   searchPrompts,
@@ -17,17 +18,22 @@ export function usePrompts() {
   const [recent, setRecent] = useState<Prompt[]>([]);
   const [results, setResults] = useState<Prompt[]>([]);
   const [query, setQuery] = useState('');
+  // '' = no filter; otherwise only prompts with this exact category.
+  const [categoryFilter, setCategoryFilter] = useState('');
+  const [categories, setCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   const reload = useCallback(async () => {
-    const [a, f, r] = await Promise.all([
+    const [a, f, r, cats] = await Promise.all([
       listAll(),
       listFavorites(5),
       listRecentlyUsed(5),
+      listCategories(),
     ]);
     setAll(a);
     setFavorites(f);
     setRecent(r);
+    setCategories(cats);
   }, []);
 
   useEffect(() => {
@@ -36,7 +42,14 @@ export function usePrompts() {
       setLoading(true);
       try {
         if (query.trim()) {
-          setResults(await searchPrompts(query));
+          // Category filter composes with search: results are narrowed to the
+          // selected category (empty = all). Filtering in JS is fine at this
+          // scale and keeps the repo search signature unchanged.
+          const found = await searchPrompts(query);
+          const filtered = categoryFilter
+            ? found.filter((p) => p.category === categoryFilter)
+            : found;
+          if (!cancelled) setResults(filtered);
         } else {
           await reload();
         }
@@ -52,7 +65,7 @@ export function usePrompts() {
     return () => {
       cancelled = true;
     };
-  }, [query, reload]);
+  }, [query, categoryFilter, reload]);
 
   const toggleFavorite = useCallback(
     async (id: string) => {
@@ -80,6 +93,12 @@ export function usePrompts() {
 
   const isSearching = useMemo(() => query.trim().length > 0, [query]);
 
+  // The All tab shows this instead of `all` — narrowed by categoryFilter.
+  const filteredAll = useMemo(
+    () => (categoryFilter ? all.filter((p) => p.category === categoryFilter) : all),
+    [all, categoryFilter]
+  );
+
   return {
     all,
     favorites,
@@ -87,6 +106,10 @@ export function usePrompts() {
     results,
     query,
     setQuery,
+    categoryFilter,
+    setCategoryFilter,
+    categories,
+    filteredAll,
     loading,
     isSearching,
     reload,

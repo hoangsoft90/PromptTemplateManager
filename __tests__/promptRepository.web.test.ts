@@ -58,8 +58,10 @@ describe('repository interface', () => {
       'hasEverExported',
       'incrementAppMeta',
       'listAll',
+      'listCategories',
       'listFavorites',
       'listRecentlyUsed',
+      'listTags',
       'markExported',
       'recordUsage',
       'searchPrompts',
@@ -184,6 +186,35 @@ describe('search (spec B5)', () => {
     await repo.createPrompt({ title: 'Discount 50%', content: 'x' });
     expect((await repo.searchPrompts('50%')).length).toBe(1);
     expect((await repo.searchPrompts('50_')).length).toBe(0);
+  });
+
+  it('matches category and tag keywords (search index includes them)', async () => {
+    await repo.createPrompt({
+      title: 'Email writer',
+      content: 'Write a friendly email',
+      category: 'Writing',
+      tags: ['sales', 'outreach'],
+    });
+    expect((await repo.searchPrompts('writing')).map((p) => p.id)).toHaveLength(1);
+    expect((await repo.searchPrompts('sales')).map((p) => p.id)).toHaveLength(1);
+    expect((await repo.searchPrompts('outreach')).map((p) => p.id)).toHaveLength(1);
+  });
+});
+
+describe('category & tag listings', () => {
+  it('listCategories returns sorted distinct non-empty categories', async () => {
+    await repo.createPrompt({ title: 'A', content: 'x', category: 'Writing' });
+    await repo.createPrompt({ title: 'B', content: 'x', category: 'dev' });
+    await repo.createPrompt({ title: 'C', content: 'x', category: 'Writing' }); // distinct
+    await repo.createPrompt({ title: 'D', content: 'x', category: '' }); // skipped
+    expect(await repo.listCategories()).toEqual(['dev', 'Writing']);
+  });
+
+  it('listTags returns distinct tags from all prompts', async () => {
+    await repo.createPrompt({ title: 'A', content: 'x', tags: ['dev', 'email'] });
+    await repo.createPrompt({ title: 'B', content: 'x', tags: ['email', 'Work'] });
+    await repo.createPrompt({ title: 'C', content: 'x', tags: [] });
+    expect(await repo.listTags()).toEqual(['dev', 'email', 'Work']);
   });
 });
 

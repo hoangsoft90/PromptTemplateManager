@@ -8,6 +8,7 @@ import renderer, { act } from 'react-test-renderer';
 import { usePrompts } from '../hooks/usePrompts';
 import {
   listAll,
+  listCategories,
   listFavorites,
   listRecentlyUsed,
   searchPrompts,
@@ -16,6 +17,7 @@ import type { Prompt } from '../types/prompt';
 
 jest.mock('../db/promptRepository', () => ({
   listAll: jest.fn(),
+  listCategories: jest.fn(),
   listFavorites: jest.fn(),
   listRecentlyUsed: jest.fn(),
   searchPrompts: jest.fn(),
@@ -24,6 +26,7 @@ jest.mock('../db/promptRepository', () => ({
 }));
 
 const mockListAll = listAll as jest.Mock;
+const mockListCategories = listCategories as jest.Mock;
 const mockListFavorites = listFavorites as jest.Mock;
 const mockListRecentlyUsed = listRecentlyUsed as jest.Mock;
 const mockSearchPrompts = searchPrompts as jest.Mock;
@@ -71,6 +74,7 @@ async function renderHook(): Promise<void> {
 beforeEach(() => {
   jest.clearAllMocks();
   mockListAll.mockResolvedValue([p1, p2]);
+  mockListCategories.mockResolvedValue(['Dev', 'Writing']);
   mockListFavorites.mockResolvedValue([p1]);
   mockListRecentlyUsed.mockResolvedValue([p2]);
   mockSearchPrompts.mockResolvedValue([p1]);
@@ -140,5 +144,50 @@ describe('usePrompts search/filter', () => {
 
     expect(result.results).toEqual([]);
     expect(result.loading).toBe(false);
+  });
+
+  it('loads categories on mount and narrows filteredAll by categoryFilter', async () => {
+    await renderHook();
+
+    expect(mockListCategories).toHaveBeenCalledTimes(1);
+    expect(result.categories).toEqual(['Dev', 'Writing']);
+    expect(result.filteredAll).toEqual([p1, p2]); // no filter → everything
+
+    await act(async () => {
+      result.setCategoryFilter('Writing');
+    });
+
+    expect(result.filteredAll).toEqual([p1]); // p1.category === 'Writing'
+    expect(mockListAll).toHaveBeenCalledTimes(2); // reload on filter change
+  });
+
+  it('composes category filter with search results', async () => {
+    await renderHook();
+    await act(async () => {
+      result.setCategoryFilter('Dev');
+    });
+
+    await act(async () => {
+      result.setQuery('email');
+    });
+
+    // searchPrompts returns [p1] (category 'Writing'); the 'Dev' filter drops it.
+    expect(mockSearchPrompts).toHaveBeenCalledWith('email');
+    expect(result.results).toEqual([]);
+    expect(result.isSearching).toBe(true);
+  });
+
+  it('clearing the category filter restores the full list', async () => {
+    await renderHook();
+    await act(async () => {
+      result.setCategoryFilter('Writing');
+    });
+    expect(result.filteredAll).toEqual([p1]);
+
+    await act(async () => {
+      result.setCategoryFilter('');
+    });
+
+    expect(result.filteredAll).toEqual([p1, p2]);
   });
 });

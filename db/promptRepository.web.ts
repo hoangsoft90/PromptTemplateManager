@@ -22,7 +22,7 @@ const META_KEY = 'ptm:app_meta';
 const SCHEMA_VERSION_KEY = 'schema_version';
 
 /** Current localStorage schema — bump + migrate data when the shape changes. */
-export const WEB_SCHEMA_VERSION = 1;
+export const WEB_SCHEMA_VERSION = 2;
 
 /**
  * Web equivalent of sqlite's PRAGMA user_version migrations: records the
@@ -30,9 +30,19 @@ export const WEB_SCHEMA_VERSION = 1;
  * (analogous to db/migrations/ on native). Called by db/init.ts.
  */
 export async function initWebStorage(): Promise<void> {
-  if ((await getAppMeta(SCHEMA_VERSION_KEY)) === null) {
-    await setAppMeta(SCHEMA_VERSION_KEY, String(WEB_SCHEMA_VERSION));
+  const current = Number((await getAppMeta(SCHEMA_VERSION_KEY)) ?? '0');
+  if (current < 2) {
+    // Migration v2: search_normalized now includes category + tags (category/
+    // tag search). Recompute every stored row so old data is searchable the
+    // same way as newly created rows.
+    const rows = readRows();
+    for (const row of rows) {
+      const p = rowToPrompt(row);
+      row.search_normalized = computeSearchNormalized(p.title, p.content, p.category, p.tags);
+    }
+    writeRows(rows);
   }
+  await setAppMeta(SCHEMA_VERSION_KEY, String(Math.max(current, WEB_SCHEMA_VERSION)));
 }
 
 // ---------------------------------------------------------------------------
@@ -128,7 +138,7 @@ export async function updatePrompt(
     category,
     tags: JSON.stringify(tags),
     // Editing title/content recomputes search_normalized (spec B3 matrix).
-    search_normalized: computeSearchNormalized(title, content),
+    search_normalized: computeSearchNormalized(title, content, category, tags),
     updated_at: Date.now(),
   };
   rows[idx] = updated;
@@ -171,6 +181,33 @@ export async function listRecentlyUsed(limit?: number): Promise<Prompt[]> {
     .map(rowToPrompt)
     .sort((a, b) => (b.lastUsedAt ?? 0) - (a.lastUsedAt ?? 0));
   return limit ? recent.slice(0, limit) : recent;
+}
+
+export async function listCategories(): Promise<string[]> {
+  const seen = new Set<string>();
+  for (const r of readRows()) {
+    const c = r.category.trim();
+    if (c) seen.add(c);
+  }
+  return [...seen].sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+}
+
+export async function listTags(): Promise<string[]> {
+  const seen = new Set<string>();
+  for (const r of readRows()) {
+    try {
+      const parsed: unknown = JSON.parse(r.tags);
+      if (Array.isArray(parsed)) {
+        for (const t of parsed) {
+          const s = String(t).trim();
+          if (s) seen.add(s);
+        }
+      }
+    } catch {
+      // malformed JSON → ignore this row's tags
+    }
+  }
+  return [...seen].sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
 }
 
 // ---------------------------------------------------------------------------
@@ -269,6 +306,8 @@ export const repository: PromptRepository = {
   listFavorites,
   listRecentlyUsed,
   searchPrompts,
+  listCategories,
+  listTags,
   toggleFavorite,
   recordUsage,
   bulkInsert,

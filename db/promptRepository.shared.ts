@@ -41,6 +41,10 @@ export interface PromptRepository {
   listFavorites(limit?: number): Promise<Prompt[]>;
   listRecentlyUsed(limit?: number): Promise<Prompt[]>;
   searchPrompts(query: string): Promise<Prompt[]>;
+  /** Distinct non-empty categories (sorted, case-insensitive) — for filter chips. */
+  listCategories(): Promise<string[]>;
+  /** Distinct tags across all prompts (sorted, case-insensitive) — for editor suggestions. */
+  listTags(): Promise<string[]>;
   toggleFavorite(id: string): Promise<Prompt>;
   recordUsage(id: string): Promise<void>;
   bulkInsert(prompts: ExportFilePrompt[]): Promise<void>;
@@ -78,8 +82,17 @@ export function rowToPrompt(row: PromptRow): Prompt {
   };
 }
 
-export function computeSearchNormalized(title: string, content: string): string {
-  return normalizeVietnamese(`${title} ${content}`);
+// Search index = title + content + category + tags, so a query like "writing"
+// finds a prompt tagged `writing` even if the keyword never appears in the
+// title/content (spec: category/tag search). Kept in one place so both
+// backends and the reindex migration stay identical.
+export function computeSearchNormalized(
+  title: string,
+  content: string,
+  category = '',
+  tags: string[] = []
+): string {
+  return normalizeVietnamese(`${title} ${content} ${category} ${tags.join(' ')}`);
 }
 
 // ---------------------------------------------------------------------------
@@ -100,7 +113,7 @@ export function buildCreateRow(
     is_favorite: 0,
     usage_count: 0,
     last_used_at: null,
-    search_normalized: computeSearchNormalized(input.title, input.content),
+    search_normalized: computeSearchNormalized(input.title, input.content, input.category, input.tags),
     created_at: now,
     updated_at: now,
   };
@@ -117,7 +130,7 @@ export function buildImportRow(p: ExportFilePrompt, now: number = Date.now()): P
     is_favorite: p.isFavorite ? 1 : 0,
     usage_count: 0,
     last_used_at: null,
-    search_normalized: computeSearchNormalized(p.title, p.content),
+    search_normalized: computeSearchNormalized(p.title, p.content, p.category, p.tags),
     created_at: now,
     updated_at: now,
   };

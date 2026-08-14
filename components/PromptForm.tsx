@@ -3,8 +3,9 @@
 // Soft-warning for unclosed variables (non-blocking, spec C5).
 
 import * as Clipboard from 'expo-clipboard';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { listCategories, listTags } from '../db/promptRepository';
 import { findUnclosedVariable } from '../lib/variableEngine';
 import { colors, radius, spacing, typography } from '../lib/theme';
 import type { Prompt } from '../types/prompt';
@@ -32,6 +33,49 @@ export function PromptForm({ initial, submitLabel, onSubmit, onCancel, enablePas
   const [category, setCategory] = useState(initial?.category ?? '');
   const [tagsInput, setTagsInput] = useState(initial?.tags.join(', ') ?? '');
   const [pasteNotice, setPasteNotice] = useState(false);
+  // Existing values across the library, offered as tap-to-select suggestion
+  // chips. Loaded once on mount — best-effort, failures are ignored.
+  const [existingCategories, setExistingCategories] = useState<string[]>([]);
+  const [existingTags, setExistingTags] = useState<string[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const [cats, tags] = await Promise.all([listCategories(), listTags()]);
+        if (cancelled) return;
+        setExistingCategories(cats);
+        setExistingTags(tags);
+      } catch {
+        // suggestions are best-effort — never block the editor on them
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Category is a single value: suggest existing categories matching the
+  // typed text (or all of them while the field is empty), minus the exact
+  // value already chosen.
+  const categorySuggestions = useMemo(() => {
+    const current = category.trim().toLowerCase();
+    if (!current) return existingCategories;
+    return existingCategories.filter(
+      (c) => c.toLowerCase().includes(current) && c.toLowerCase() !== current
+    );
+  }, [existingCategories, category]);
+
+  // Tags are comma-separated: suggest existing tags not already present.
+  const tagSuggestions = useMemo(() => {
+    const present = new Set(
+      tagsInput
+        .split(',')
+        .map((t) => t.trim().toLowerCase())
+        .filter(Boolean)
+    );
+    return existingTags.filter((t) => !present.has(t.toLowerCase()));
+  }, [existingTags, tagsInput]);
 
   const unclosed = useMemo(() => findUnclosedVariable(content), [content]);
   const canSave = title.trim().length > 0 && content.trim().length > 0;
@@ -119,6 +163,20 @@ export function PromptForm({ initial, submitLabel, onSubmit, onCancel, enablePas
         placeholderTextColor={colors.textMuted}
         accessibilityLabel="Prompt category"
       />
+      {categorySuggestions.length > 0 && (
+        <View style={styles.suggestionRow}>
+          {categorySuggestions.slice(0, MAX_SUGGESTIONS).map((c) => (
+            <Pressable
+              key={c}
+              onPress={() => setCategory(c)}
+              style={styles.chip}
+              accessibilityLabel={`Suggested category ${c}`}
+            >
+              <Text style={styles.chipText}>{c}</Text>
+            </Pressable>
+          ))}
+        </View>
+      )}
 
       <Text style={styles.label}>Tags</Text>
       <TextInput
@@ -130,6 +188,20 @@ export function PromptForm({ initial, submitLabel, onSubmit, onCancel, enablePas
         autoCapitalize="none"
         accessibilityLabel="Prompt tags"
       />
+      {tagSuggestions.length > 0 && (
+        <View style={styles.suggestionRow}>
+          {tagSuggestions.slice(0, MAX_SUGGESTIONS).map((t) => (
+            <Pressable
+              key={t}
+              onPress={() => setTagsInput(tagsInput ? `${tagsInput}, ${t}` : t)}
+              style={styles.chip}
+              accessibilityLabel={`Suggested tag ${t}`}
+            >
+              <Text style={styles.chipText}>{t}</Text>
+            </Pressable>
+          ))}
+        </View>
+      )}
 
       <View style={styles.actions}>
         <Pressable
@@ -145,12 +217,13 @@ export function PromptForm({ initial, submitLabel, onSubmit, onCancel, enablePas
           targetId="editor-save"
           reason="Save needs both a title and some content."
           unlockHint="Fill in the required Title and Content fields to enable Save."
-          style={styles.button}
+          style={styles.submitWrap}
         >
           <Pressable
             onPress={handleSubmit}
             disabled={!canSave}
             style={({ pressed }) => [
+              styles.button,
               styles.submitButton,
               !canSave && styles.submitDisabled,
               pressed && canSave && styles.pressed,
@@ -204,6 +277,9 @@ const styles = StyleSheet.create({
   },
   warningText: { fontSize: 13, color: colors.warning, fontWeight: '500' },
   actions: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.xl },
+  // Wrapper only lays out the half-width slot; the real button styles live on
+  // the inner Pressable (styles.button) so Save matches Cancel exactly.
+  submitWrap: { flex: 1 },
   button: {
     flex: 1,
     alignItems: 'center',
@@ -216,4 +292,17 @@ const styles = StyleSheet.create({
   cancelText: { fontSize: 15, fontWeight: '600', color: colors.textPrimary },
   submitText: { fontSize: 15, fontWeight: '600', color: '#FFFFFF' },
   pressed: { opacity: 0.85 },
+  suggestionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.sm },
+  chip: {
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs + 2,
+  },
+  chipText: { fontSize: 13, color: colors.primary, fontWeight: '600' },
 });
+
+// Cap how many suggestion chips render so a long-tail library stays compact.
+const MAX_SUGGESTIONS = 8;

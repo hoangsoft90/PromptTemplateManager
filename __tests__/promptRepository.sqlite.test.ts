@@ -117,4 +117,27 @@ describe('sqlite backend (real SQL)', () => {
     expect(await repo.searchPrompts('')).toEqual([]);
     expect(await repo.searchPrompts('   ')).toEqual([]);
   });
+
+  it('searches category and tag keywords (search index includes them)', async () => {
+    await repo.createPrompt({
+      title: 'Email writer',
+      content: 'Write a friendly email',
+      category: 'Writing',
+      tags: ['sales', 'outreach'],
+    });
+    // A keyword that only appears in category/tags (never title/content) must
+    // still match — this is what migration v2 reindexes old rows to enable.
+    expect((await repo.searchPrompts('writing')).map((p) => p.id)).toHaveLength(1);
+    expect((await repo.searchPrompts('sales')).map((p) => p.id)).toHaveLength(1);
+    expect((await repo.searchPrompts('outreach')).map((p) => p.id)).toHaveLength(1);
+    expect((await repo.searchPrompts('nope')).map((p) => p.id)).toHaveLength(0);
+  });
+
+  it('lists distinct non-empty categories and tags', async () => {
+    await repo.createPrompt({ title: 'A', content: 'x', category: 'Writing', tags: ['dev', 'email'] });
+    await repo.createPrompt({ title: 'B', content: 'x', category: 'dev', tags: ['email', 'Work'] });
+    await repo.createPrompt({ title: 'C', content: 'x', category: '', tags: [] }); // skipped
+    expect(await repo.listCategories()).toEqual(['dev', 'Writing']);
+    expect(await repo.listTags()).toEqual(['dev', 'email', 'Work']);
+  });
 });
