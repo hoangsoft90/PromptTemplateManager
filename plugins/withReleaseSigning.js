@@ -66,9 +66,13 @@ module.exports = function withReleaseSigning(config) {
 
     // --- 2. Point the `release` buildType at the new signingConfig ---
     // The RN template ships `signingConfig signingConfigs.debug` inside the
-    // release buildType too; swap only the one after `release {`.
+    // release buildType too. IMPORTANT: search for `release {` only INSIDE the
+    // `buildTypes {` block — the first `release {` in the file is the
+    // signingConfigs.release we just added in step 1, not the buildType.
     const TARGET = 'signingConfig signingConfigs.debug';
-    const releaseIdx = next.indexOf('release {');
+    const buildTypesMarker = 'buildTypes {';
+    const buildTypesIdx = next.indexOf(buildTypesMarker);
+    const releaseIdx = buildTypesIdx === -1 ? -1 : next.indexOf('release {', buildTypesIdx);
     if (!next.includes('signingConfig signingConfigs.release') && releaseIdx !== -1) {
       const hit = next.indexOf(TARGET, releaseIdx);
       if (hit !== -1) {
