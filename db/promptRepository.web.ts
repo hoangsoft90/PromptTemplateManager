@@ -12,6 +12,7 @@ import {
   buildCreateRow,
   buildImportRow,
   computeSearchNormalized,
+  distinctTags,
   rankSearchResults,
   rowToPrompt,
   type PromptRepository,
@@ -193,21 +194,7 @@ export async function listCategories(): Promise<string[]> {
 }
 
 export async function listTags(): Promise<string[]> {
-  const seen = new Set<string>();
-  for (const r of readRows()) {
-    try {
-      const parsed: unknown = JSON.parse(r.tags);
-      if (Array.isArray(parsed)) {
-        for (const t of parsed) {
-          const s = String(t).trim();
-          if (s) seen.add(s);
-        }
-      }
-    } catch {
-      // malformed JSON → ignore this row's tags
-    }
-  }
-  return [...seen].sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+  return distinctTags(readRows());
 }
 
 // ---------------------------------------------------------------------------

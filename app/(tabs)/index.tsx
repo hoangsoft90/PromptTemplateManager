@@ -47,6 +47,19 @@ export default function AllPromptsTab() {
   const shown = isSearching ? results : filteredAll;
   // An active category with no matches is "no prompts here", not an empty library.
   const filteredEmpty = !isSearching && !!categoryFilter && shown.length === 0;
+  const emptyProps = filteredEmpty
+    ? {
+        title: 'No prompts in this category',
+        message: `Nothing tagged “${categoryFilter}” yet. Pick another category or clear the filter.`,
+      }
+    : {
+        title: 'Your prompt library is empty',
+        message: 'Turn your repeated AI instructions into reusable templates with {{variables}}.',
+        primaryLabel: 'Create prompt',
+        secondaryLabel: 'Import',
+        onPrimary: () => router.push('/prompt/new'),
+        onSecondary: () => router.push('/settings'),
+      };
 
   return (
     <View style={styles.container}>
@@ -63,16 +76,7 @@ export default function AllPromptsTab() {
         isSearching={isSearching}
         query={query}
         icon="📋"
-        title={filteredEmpty ? 'No prompts in this category' : 'Your prompt library is empty'}
-        message={
-          filteredEmpty
-            ? `Nothing tagged “${categoryFilter}” yet. Pick another category or clear the filter.`
-            : 'Turn your repeated AI instructions into reusable templates with {{variables}}.'
-        }
-        primaryLabel={filteredEmpty ? undefined : 'Create prompt'}
-        secondaryLabel={filteredEmpty ? undefined : 'Import'}
-        onPrimary={filteredEmpty ? undefined : () => router.push('/prompt/new')}
-        onSecondary={filteredEmpty ? undefined : () => router.push('/settings')}
+        {...emptyProps}
       />
     </View>
   );

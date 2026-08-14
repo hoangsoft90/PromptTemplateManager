@@ -60,26 +60,42 @@ export interface PromptRepository {
 // Row mapping
 // ---------------------------------------------------------------------------
 
-export function rowToPrompt(row: PromptRow): Prompt {
-  let tags: string[] = [];
+/** Parse a stored tags JSON column defensively — malformed/absent → []. */
+export function parseTags(raw: string): string[] {
   try {
-    const parsed = JSON.parse(row.tags);
-    if (Array.isArray(parsed)) tags = parsed.map(String);
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map(String);
   } catch {
-    tags = [];
+    return [];
   }
+}
+
+export function rowToPrompt(row: PromptRow): Prompt {
   return {
     id: row.id,
     title: row.title,
     content: row.content,
     category: row.category,
-    tags,
+    tags: parseTags(row.tags),
     isFavorite: row.is_favorite === 1,
     usageCount: row.usage_count,
     lastUsedAt: row.last_used_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
+}
+
+/** Distinct trimmed non-empty tags across rows, sorted case-insensitively. */
+export function distinctTags(rows: PromptRow[]): string[] {
+  const seen = new Set<string>();
+  for (const row of rows) {
+    for (const t of parseTags(row.tags)) {
+      const s = t.trim();
+      if (s) seen.add(s);
+    }
+  }
+  return [...seen].sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
 }
 
 // Search index = title + content + category + tags, so a query like "writing"

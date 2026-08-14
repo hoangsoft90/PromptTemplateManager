@@ -12,6 +12,12 @@ import {
 } from '../db/promptRepository';
 import type { Prompt } from '../types/prompt';
 
+// Narrow a list to the selected category ('' = no filter) — used for both the
+// browse list and search results so the rule lives in exactly one place.
+function narrowByCategory(list: Prompt[], category: string): Prompt[] {
+  return category ? list.filter((p) => p.category === category) : list;
+}
+
 export function usePrompts() {
   const [all, setAll] = useState<Prompt[]>([]);
   const [favorites, setFavorites] = useState<Prompt[]>([]);
@@ -46,10 +52,7 @@ export function usePrompts() {
           // selected category (empty = all). Filtering in JS is fine at this
           // scale and keeps the repo search signature unchanged.
           const found = await searchPrompts(query);
-          const filtered = categoryFilter
-            ? found.filter((p) => p.category === categoryFilter)
-            : found;
-          if (!cancelled) setResults(filtered);
+          if (!cancelled) setResults(narrowByCategory(found, categoryFilter));
         } else {
           await reload();
         }
@@ -94,10 +97,7 @@ export function usePrompts() {
   const isSearching = useMemo(() => query.trim().length > 0, [query]);
 
   // The All tab shows this instead of `all` — narrowed by categoryFilter.
-  const filteredAll = useMemo(
-    () => (categoryFilter ? all.filter((p) => p.category === categoryFilter) : all),
-    [all, categoryFilter]
-  );
+  const filteredAll = useMemo(() => narrowByCategory(all, categoryFilter), [all, categoryFilter]);
 
   return {
     all,

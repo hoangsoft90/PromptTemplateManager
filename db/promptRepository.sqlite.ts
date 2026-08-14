@@ -8,6 +8,7 @@ import {
   buildCreateRow,
   buildImportRow,
   computeSearchNormalized,
+  distinctTags,
   rankSearchResults,
   rowToPrompt,
   rowToValues,
@@ -116,21 +117,7 @@ export async function listTags(): Promise<string[]> {
   // Tags are stored as one JSON array per row — DISTINCT must happen in JS.
   // At MVP scale (hundreds of rows) this is fast and avoids JSON1 reliance.
   const rows = await db.getAllAsync<PromptRow>('SELECT tags FROM prompts');
-  const seen = new Set<string>();
-  for (const row of rows) {
-    try {
-      const parsed: unknown = JSON.parse(row.tags);
-      if (Array.isArray(parsed)) {
-        for (const t of parsed) {
-          const s = String(t).trim();
-          if (s) seen.add(s);
-        }
-      }
-    } catch {
-      // malformed JSON → ignore this row's tags
-    }
-  }
-  return [...seen].sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+  return distinctTags(rows);
 }
 
 // ---------------------------------------------------------------------------

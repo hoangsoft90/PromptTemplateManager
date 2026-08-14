@@ -5,7 +5,7 @@
 import { Asset } from 'expo-asset';
 import type { SQLiteDatabase } from 'expo-sqlite';
 import { readTextFile } from '../lib/fileIO';
-import { computeSearchNormalized } from './promptRepository.shared';
+import { computeSearchNormalized, parseTags } from './promptRepository.shared';
 import type { PromptRow } from '../types/prompt';
 
 type Migration = { version: number; up: (db: SQLiteDatabase) => Promise<void> };
@@ -41,15 +41,8 @@ const migrations: Migration[] = [
     up: async (db) => {
       const rows = await db.getAllAsync<PromptRow>('SELECT * FROM prompts');
       for (const row of rows) {
-        let tags: string[] = [];
-        try {
-          const parsed: unknown = JSON.parse(row.tags);
-          if (Array.isArray(parsed)) tags = parsed.map(String);
-        } catch {
-          tags = [];
-        }
         await db.runAsync('UPDATE prompts SET search_normalized = ? WHERE id = ?', [
-          computeSearchNormalized(row.title, row.content, row.category, tags),
+          computeSearchNormalized(row.title, row.content, row.category, parseTags(row.tags)),
           row.id,
         ]);
       }
