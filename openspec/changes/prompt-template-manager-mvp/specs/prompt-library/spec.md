@@ -44,16 +44,16 @@ The system SHALL let the user mark a prompt as favorite or remove the favorite m
 - **WHEN** the user toggles favorite off on a favorite prompt
 - **THEN** the prompt is no longer marked as favorite and disappears from the Favorites section
 
-### Requirement: Home screen sections
-When no search query is active, the Home screen SHALL display: Favorites (top 5), Recently Used (top 5, only prompts with a recorded last-used time), and All Prompts.
+### Requirement: Home screen tabs
+When no search query is active, the Home screen SHALL present a 3-tab layout: **All Prompts**, **Favorites**, and **Recently Used**. The Favorites tab SHALL show favorite prompts (top 5), the Recently Used tab SHALL show only prompts with a recorded last-used time (top 5, most recent first), and the All Prompts tab SHALL show every prompt (narrowable by category — see the category-tag-search capability).
 
-#### Scenario: Home shows favorites, recent, and all
+#### Scenario: Home tabs show favorites, recent, and all
 - **WHEN** the Home screen is displayed with no active search
-- **THEN** the user sees a Favorites section (up to 5), a Recently Used section (up to 5), and an All Prompts section
+- **THEN** the user can switch between an All Prompts tab, a Favorites tab (up to 5), and a Recently Used tab (up to 5)
 
 #### Scenario: Empty library shows empty state
 - **WHEN** the library contains no prompts
-- **THEN** the Home screen shows an actionable empty state offering Create and Import
+- **THEN** the All Prompts tab shows an actionable empty state offering Create and Import
 
 ### Requirement: Detail screen actions
 The system SHALL provide a Detail screen for a prompt that shows the raw template content and offers edit, delete, favorite toggle, and copy actions.

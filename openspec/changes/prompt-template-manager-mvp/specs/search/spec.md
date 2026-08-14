@@ -29,10 +29,10 @@ When a search query is active, results SHALL be ranked in this order: (1) title 
 - **WHEN** two prompts match: A (title contains the query) and B (title starts with the query)
 - **THEN** B appears before A in the results
 
-### Requirement: Search hides browse sections
-While a search query is non-empty, the system SHALL display only ranked search results and SHALL hide the Favorites and Recently Used browse sections.
+### Requirement: Search replaces tab lists
+While a search query is non-empty, every Home tab (All Prompts, Favorites, Recently Used) SHALL display only the ranked search results — the Favorites and Recently Used tab lists SHALL be replaced by the results.
 
-#### Scenario: search hides browse sections
+#### Scenario: search replaces tab lists
 - **WHEN** a non-empty search query is entered
-- **THEN** the Favorites and Recently Used sections are not shown
+- **THEN** the Favorites and Recently Used tab lists are not shown
 - **AND** only the ranked search results are displayed

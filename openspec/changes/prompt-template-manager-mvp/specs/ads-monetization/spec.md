@@ -5,7 +5,7 @@ Monetize the app with Google AdMob on Android and iOS through a low-frequency ad
 ## ADDED Requirements
 
 ### Requirement: Ads are native-only and non-personalized
-The system SHALL display ads only on native platforms (Android/iOS). On web, no ad component SHALL render and no ad SDK SHALL be initialized. All ad requests SHALL use non-personalized ads only (`requestNonPersonalizedAdsOnly: true`), so no GDPR consent form is required.
+The system SHALL display ads only on native platforms (Android/iOS). On web, no ad component SHALL render and no ad SDK SHALL be initialized. All ad requests SHALL use non-personalized ads only (`requestNonPersonalizedAdsOnly: true`); production requests are additionally gated on the UMP consent flow (see the Test-ads mode flag requirement).
 
 #### Scenario: no ads on web
 - **WHEN** the app runs on the web platform
@@ -27,10 +27,10 @@ The system SHALL display an adaptive banner ad at the bottom of the Home, Settin
 - **THEN** an adaptive banner ad is shown below the content and above the action buttons
 
 ### Requirement: Interstitial frequency gate
-The system SHALL count copy actions (Fill & Copy and Quick Copy) in on-device storage and SHALL attempt to show an interstitial ad after every 15 copies. The interstitial SHALL only be shown if it is already loaded, SHALL never delay or block the copy action, and SHALL reset its counter after a show attempt. When the threshold is reached, the system SHALL first offer the user the choice to watch a rewarded ad instead.
+The system SHALL count copy actions (Fill & Copy and Quick Copy) in on-device storage and SHALL attempt to show an interstitial ad after every 10 copies. The interstitial SHALL only be shown if it is already loaded, SHALL never delay or block the copy action, and SHALL reset its counter after a show attempt. When the threshold is reached, the system SHALL first offer the user the choice to watch a rewarded ad instead.
 
 #### Scenario: interstitial after threshold
-- **WHEN** the 15th copy action since the last interstitial completes
+- **WHEN** the 10th copy action since the last interstitial completes
 - **THEN** the user is offered the rewarded-ad choice and, if declined, the interstitial is shown if loaded and the counter resets
 
 #### Scenario: copy flow is never blocked by ads
@@ -64,14 +64,14 @@ The system SHALL show an App Open ad (Google's highest-eCPM format) on backgroun
 - **THEN** no app open ad is shown
 
 ### Requirement: Test-first ad configuration
-The system SHALL ship with Google test ad unit IDs by default so the app runs and renders test ads without an AdMob account, and SHALL make the production unit IDs a simple one-place configuration change.
+The system SHALL be able to run entirely on Google test ad unit IDs (no AdMob account, no production traffic) so the ad pipeline can be exercised safely during development. The `TEST_ADS` flag in `lib/config.ts` selects between test and production unit IDs (see the Test-ads mode flag requirement).
 
 #### Scenario: test ads render in development
-- **WHEN** the app runs in development with no real AdMob account configured
+- **WHEN** `TEST_ADS` is true and the app runs with no real AdMob account configured
 - **THEN** test banner and interstitial ads are used and render without errors
 
 ### Requirement: Test-ads mode flag
-The system SHALL expose a single configuration flag (`TEST_ADS` in `lib/config.ts`, default `true`) that switches ALL ad formats — banner, interstitial, rewarded, and app open — between Google's official test unit IDs and the production unit IDs on both Android and iOS. When test mode is on, the system SHALL skip the UMP consent gate entirely (test ads never serve real traffic, so no consent is needed), SHALL log ad load failures to aid diagnosis, and SHALL NOT touch production ad traffic (preventing AdMob account limits while testing). The iOS production unit IDs SHALL remain placeholders until an iOS release is prepared.
+The system SHALL expose a single configuration flag (`TEST_ADS` in `lib/config.ts`, default `false` — production is the shipped build; set to `true` during development/testing) that switches ALL ad formats — banner, interstitial, rewarded, and app open — between Google's official test unit IDs and the production unit IDs on both Android and iOS. When test mode is on, the system SHALL skip the UMP consent gate entirely (test ads never serve real traffic, so no consent is needed), SHALL log ad load failures to aid diagnosis, and SHALL NOT touch production ad traffic (preventing AdMob account limits while testing). The iOS production unit IDs SHALL remain placeholders until an iOS release is prepared.
 
 #### Scenario: test mode uses official test IDs for every format
 - **WHEN** `TEST_ADS` is true and the app requests a banner, interstitial, rewarded, or app-open ad

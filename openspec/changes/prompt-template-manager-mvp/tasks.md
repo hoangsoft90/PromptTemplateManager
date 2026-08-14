@@ -30,9 +30,9 @@
 
 - [x] 4.1 Compute `search_normalized` on create/update (normalizeVietnamese(title + ' ' + content))
 - [x] 4.2 Search bar + `searchPrompts` (LIKE query + JS ranking tuple: title starts-with > title contains > content contains > usage DESC > last_used DESC)
-- [x] 4.3 Hide Favorites/Recent sections while query non-empty; show only ranked results
-- [x] 4.4 Favorites section (top 5) + toggle wiring
-- [x] 4.5 Recently Used section (top 5, `last_used_at IS NOT NULL`)
+- [x] 4.3 Replace Favorites/Recent tab lists with ranked results while query non-empty
+- [x] 4.4 Favorites tab (top 5) + toggle wiring
+- [x] 4.5 Recently Used tab (top 5, `last_used_at IS NOT NULL`)
 
 ## 5. Import / Export & Backup Reminder
 
@@ -48,7 +48,7 @@
 - [x] 6.0.2 Create `lib/ads.ts`: test unit IDs, web-safe lazy native import, interstitial singleton (preload + show-if-loaded)
 - [x] 6.0.3 Create `components/AdBanner.tsx` (adaptive banner, web guard) + pin to Home bottom with FAB raised
 - [x] 6.0.4 Initialize SDK in root layout; track copy actions in app_meta and trigger interstitial every 10 copies from all copy paths
-- [x] 6.0.5 Adjust interstitial frequency to every 15 copies; add rewarded ads granting a 20-copy interstitial shield
+- [x] 6.0.5 Confirm interstitial frequency at every 10 copies; add rewarded ads granting a 20-copy interstitial shield
 - [x] 6.0.6 Add global `AdGateHost` + `adGateStore` (offer dialog survives navigation); rewarded CTA + shield status in Settings; web stub extended with RewardedAd
 
 ## 6. Samples, Polish & Ship
@@ -79,5 +79,5 @@
 - [x] 9.2 Release signing config plugin `plugins/withReleaseSigning.js`: injects `signingConfigs.release` + `buildTypes.release` into `android/app/build.gradle` when signing env vars are present; **no-op** when absent (debug/CI APK builds unaffected); registered in `app.json`; verified via local prebuild
 - [x] 9.3 Release keystore created locally (`prompt-template-manager.keystore`, alias `prompttemplate`) — gitignored (`*.keystore`), **passwords kept out of repo/memory**; uploaded as base64 GitHub Secret; use Play App Signing (upload key) on the Play Console
 - [x] 9.4 Privacy policy: `PRIVACY_POLICY.md` (English, verified against actual app behavior — 100% on-device, AdMob non-personalized only) hosted publicly at https://hoangsoft90.github.io/PromptTemplateManager/ (orphan `gh-pages` branch + Pages enabled)
-- [ ] 9.5 Store listing draft `chplay.md` (app name/short/full description ASO, category + tags, screenshot/graphic/icon ideas, Play Console content checklist) — written, **not yet committed/pushed**
-- [ ] 9.6 Play Store upload: build signed AAB via workflow (in progress) → upload to Play Console with Play App Signing → set `TEST_ADS = false` + production iOS unit IDs in a future release build
+- [x] 9.5 Store listing draft `chplay.md` (app name/short/full description ASO, category + tags, screenshot/graphic/icon ideas, Play Console content checklist) — written and committed/pushed; `marketing/icon.png` (512²) + `marketing/feature-graphic.png` (1024×500) generated
+- [ ] 9.6 Play Store upload: signed AAB built via workflow (ready) → upload to Play Console with Play App Signing → `TEST_ADS = false` already set (production) → replace iOS placeholder unit IDs in a future iOS release build

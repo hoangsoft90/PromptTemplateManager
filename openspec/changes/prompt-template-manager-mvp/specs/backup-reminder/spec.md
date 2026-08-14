@@ -23,7 +23,7 @@ The banner SHALL include an "Export now" action that opens the Export flow direc
 - **THEN** the Export flow opens directly
 
 ### Requirement: Banner dismissal and re-show
-The system SHALL let the user dismiss the banner, and SHALL remember the dismissal. If the user still has not exported, the banner SHALL re-appear after a reasonable number of additional prompts are created rather than on every screen visit.
+The system SHALL let the user dismiss the banner, and SHALL remember the dismissal. If the user still has not exported, the banner SHALL re-appear after 20 additional prompts are created rather than on every screen visit.
 
 #### Scenario: dismissed banner does not nag immediately
 - **WHEN** the user dismisses the banner and has still not exported

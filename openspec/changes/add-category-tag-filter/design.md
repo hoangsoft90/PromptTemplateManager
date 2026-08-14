@@ -30,7 +30,7 @@ SQLite: `db/migrate.ts` adds version 2 — read every row, recompute `search_nor
 - Alternative considered: lazy reindex on first search — rejected (first search would silently miss old rows; eager migration is a few ms at this scale).
 
 ### D3. Suggestion chips are advisory, never constraining
-`PromptForm` loads `listCategories()`/`listTags()` once on mount (best-effort — failures swallowed). Category chips show values matching the typed prefix (or all while empty), minus the exact value chosen; tag chips show values not already present in the comma-separated input (case-insensitive set). Tapping a tag chip appends `, <tag>`. Cap 8 chips per row.
+`PromptForm` loads `listCategories()`/`listTags()` once on mount (best-effort — failures swallowed). Category chips show values containing the typed text, case-insensitively (or all while empty), minus the exact value chosen; tag chips show values not already present in the comma-separated input (case-insensitive set). Tapping a tag chip appends `, <tag>`. Cap 8 chips per row.
 
 - Rationale: chips must never block free typing (users still invent new values); self-filtering avoids redundant options. Best-effort loading means the editor never depends on the listings query.
 - Alternative considered: a picker/dropdown replacing the text input — rejected (heavier, and free-typing is the existing UX).
@@ -48,7 +48,7 @@ Pure React Native components + existing repository layer. No storage, navigation
 
 - [Migration v2 runs on every existing install] → Mitigation: recompute is a few ms per row; idempotent; no data loss (only `search_normalized` rewritten).
 - [Tag dedup/listings cost on huge libraries] → Mitigation: distinct-in-JS is fine at MVP scale; revisit with JSON1/FTS only if the library ever grows orders of magnitude.
-- [Filter + search interaction confusion] → Mitigation: the chip row is hidden while searching is *not* the choice — chips stay visible and compose (D4); the filtered-empty state names the active category so the user can clear it.
+- [Filter + search interaction confusion] → Mitigation: the chip row hides while a query is active (keeps the search UI clean), but the active category still narrows search results in `usePrompts` (D4); the filtered-empty state names the active category so the user can clear it.
 - [Save button wrapped in DisabledStateHelper previously looked broken] → Mitigation: fixed in this change — the wrapper is layout-only (`submitWrap`), real button styles stay on the inner Pressable.
 
 ## Migration Plan
