@@ -30,12 +30,21 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Decode keystore from secret
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > release.keystore
+          chmod 600 release.keystore
+
       - name: Generate native project (expo prebuild)
         run: npx expo prebuild --platform android --clean --no-install
         env:
           CI: '1'
+          ANDROID_KEYSTORE_FILE: release.keystore
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
 
-      - name: Build release APK
+      - name: Build release APK (signed with project keystore)
         working-directory: android
         run: ./gradlew assembleRelease
 

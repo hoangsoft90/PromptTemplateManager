@@ -138,14 +138,8 @@ top 1/3 và bottom 1/4 theo guideline Play).
 
 ### App Icon (512×512 — dùng chung cho Play)
 
-```
-Gợi ý: Đã có sẵn assets/icon.png (1024² gradient indigo + glyph {{ }}) —
-tự động scale xuống 512. Nếu muốn bản riêng cho Play:
-  - Giữ gradient indigo #4F46E5 làm nền (đúng thương hiệu)
-  - Glyph chính giữa: "{{ }}" màu trắng đậm, bo góc mềm
-  - Không dùng chữ nhỏ, không dùng chi tiết mảnh — icon bị scale nhỏ
-    trên launcher nên cần tương phản cao
-```
+✅ **Đã tạo sẵn** (scale từ `assets/icon.png` 1024² gradient indigo + glyph {{ }}):
+- `marketing/icon.png` — **512×512**, sẵn sàng upload thẳng lên Play Console
 
 ---
 

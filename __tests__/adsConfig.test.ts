@@ -1,11 +1,13 @@
-// __tests__/adsConfig.test.ts — locks the test-ads mode (lib/config.ts
-// TEST_ADS = true):
+// __tests__/adsConfig.test.ts — locks the TEST-ADS code path (lib/ads.ts with
+// TEST_ADS = true, mocked below — independent of the live lib/config.ts flag,
+// which is false in production):
 //   - every ad format getter returns Google's official TEST unit IDs on both
 //     Android and iOS
 //   - initializeAds starts the SDK immediately — no UMP consent gate, no
 //     gatherConsent call — so test ads always load on any device
 //   - canRequestAds() flips to true right away (banner mounts)
 //
+// The production path (TEST_ADS = false) is locked in consent.test.ts.
 // Strategy: mock lib/config with TEST_ADS=true, mock react-native-google-mobile-ads
 // (recording init/consent calls), and jest.replaceProperty(Platform, 'OS', ...)
 // so getters are exercised per platform.
